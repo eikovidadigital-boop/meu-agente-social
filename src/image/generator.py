@@ -33,7 +33,8 @@ class ImageGenerator:
                 OPENAI_EDITS,
                 headers={"Authorization": f"Bearer {config.OPENAI_API_KEY}"},
                 files={"image": ("produto.png", img.content, "image/png")},
-                data={"model": "gpt-image-1", "prompt": prompt, "size": "1024x1024", "n": "1"},
+                data={"model": "gpt-image-1", "prompt": prompt, "size": "1024x1024",
+                      "n": "1", "output_format": "jpeg"},
                 timeout=120,
             )
         else:
@@ -42,7 +43,8 @@ class ImageGenerator:
                 OPENAI_GENERATIONS,
                 headers={"Authorization": f"Bearer {config.OPENAI_API_KEY}",
                          "Content-Type": "application/json"},
-                json={"model": "gpt-image-1", "prompt": prompt, "size": "1024x1024", "n": 1},
+                json={"model": "gpt-image-1", "prompt": prompt, "size": "1024x1024",
+                      "n": 1, "output_format": "jpeg"},
                 timeout=120,
             )
 
