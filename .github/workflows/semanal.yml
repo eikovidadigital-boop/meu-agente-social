@@ -1,0 +1,30 @@
+name: Relatorio Semanal
+
+on:
+  schedule:
+    - cron: '0 23 * * 0'      # domingo ~20h BRT
+  workflow_dispatch:
+
+jobs:
+  relatorio:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Instalar dependencias
+        run: pip install -r requirements.txt
+      - name: Gerar relatorio semanal
+        env:
+          IG_ACCOUNT_ID: ${{ secrets.IG_ACCOUNT_ID }}
+          FACEBOOK_PAGE_ID: ${{ secrets.FACEBOOK_PAGE_ID }}
+          PAGE_ACCESS_TOKEN: ${{ secrets.PAGE_ACCESS_TOKEN }}
+        run: python run_semanal.py
+      - name: Salvar relatorio e estado no repo
+        run: |
+          git config user.name "agente"
+          git config user.email "agente@bot"
+          git add data/ vault/ || true
+          git commit -m "relatorio semanal $(date -u +%Y-%m-%d)" || echo "nada a commitar"
+          git push || echo "push falhou"
