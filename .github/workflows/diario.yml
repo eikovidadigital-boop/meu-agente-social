@@ -6,6 +6,9 @@ on:
     - cron: '0 22 * * 2,4'     # ~19h BRT — Ter/Qui (conversao)
   workflow_dispatch:             # permite rodar manualmente
 
+permissions:
+  contents: write
+
 jobs:
   publicar:
     runs-on: ubuntu-latest
