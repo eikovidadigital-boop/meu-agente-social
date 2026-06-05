@@ -1,12 +1,13 @@
 """
 Gerador de Imagens.
 Cria a imagem com gpt-image-1 (img2img a partir da foto do produto, quando
-disponível) e hospeda no catbox.moe, devolvendo uma URL pública que o
-Instagram aceita. catbox não exige cadastro nem chave.
+disponível) e hospeda no Cloudinary (upload assinado), devolvendo uma URL
+pública que o Instagram aceita. Aceita upload de servidor (GitHub Actions).
 
 Injeção de dependência: as chamadas externas podem ser substituídas em testes.
 """
-import base64
+import hashlib
+import time
 
 import requests
 
@@ -14,7 +15,6 @@ from src import config
 
 OPENAI_EDITS = "https://api.openai.com/v1/images/edits"
 OPENAI_GENERATIONS = "https://api.openai.com/v1/images/generations"
-CATBOX_UPLOAD = "https://catbox.moe/user/api.php"
 
 
 class ImageGenerator:
@@ -57,21 +57,30 @@ class ImageGenerator:
         return dados["data"][0]["b64_json"]
 
     def hospedar(self, b64: str) -> str:
-        """Hospeda a imagem no catbox.moe e retorna a URL pública (aceita pelo Instagram)."""
+        """Hospeda a imagem no Cloudinary (upload assinado) e retorna a URL pública."""
         if self._hospedar_fn is not None:
             return self._hospedar_fn(b64=b64)
 
-        img_bytes = base64.b64decode(b64)
+        timestamp = str(int(time.time()))
+        # assinatura: sha1 dos parâmetros ordenados + api_secret
+        para_assinar = f"timestamp={timestamp}{config.CLOUDINARY_API_SECRET}"
+        assinatura = hashlib.sha1(para_assinar.encode()).hexdigest()
+
+        url = f"https://api.cloudinary.com/v1_1/{config.CLOUDINARY_CLOUD_NAME}/image/upload"
         resp = requests.post(
-            CATBOX_UPLOAD,
-            data={"reqtype": "fileupload"},
-            files={"fileToUpload": ("imagem.jpg", img_bytes, "image/jpeg")},
+            url,
+            data={
+                "file": f"data:image/jpeg;base64,{b64}",
+                "api_key": config.CLOUDINARY_API_KEY,
+                "timestamp": timestamp,
+                "signature": assinatura,
+            },
             timeout=60,
         )
-        url = resp.text.strip()
-        if not url.startswith("http"):
-            raise RuntimeError(f"Erro catbox: {url}")
-        return url
+        dados = resp.json()
+        if "secure_url" not in dados:
+            raise RuntimeError(f"Erro Cloudinary: {dados}")
+        return dados["secure_url"]
 
     def criar(self, prompt: str, produto_img_url: str = None) -> str:
         """Fluxo completo: prompt -> imagem -> URL pública."""
