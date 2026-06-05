@@ -26,10 +26,9 @@ IG_ACCOUNT_ID = os.environ.get("IG_ACCOUNT_ID", "")
 FACEBOOK_PAGE_ID = os.environ.get("FACEBOOK_PAGE_ID", "")
 PAGE_ACCESS_TOKEN = os.environ.get("PAGE_ACCESS_TOKEN", "")
 
-# Cloudinary (host de imagem que o Instagram aceita; upload assinado)
-CLOUDINARY_CLOUD_NAME = os.environ.get("CLOUDINARY_CLOUD_NAME", "")
-CLOUDINARY_API_KEY = os.environ.get("CLOUDINARY_API_KEY", "")
-CLOUDINARY_API_SECRET = os.environ.get("CLOUDINARY_API_SECRET", "")
+# Hospedagem de imagem via GitHub (repo público + raw URL; o Instagram aceita)
+GH_TOKEN = os.environ.get("GH_TOKEN", "")
+GH_IMAGES_REPO = os.environ.get("GH_IMAGES_REPO", "")  # ex.: "usuario/imagens"
 
 # Garante que as pastas de dados existem
 DATA_DIR.mkdir(parents=True, exist_ok=True)
