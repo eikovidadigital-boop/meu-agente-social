@@ -1,12 +1,12 @@
 """
 Gerador de Imagens.
 Cria a imagem com gpt-image-1 (img2img a partir da foto do produto, quando
-disponível) e hospeda no Cloudinary (upload assinado), devolvendo uma URL
-pública que o Instagram aceita. Aceita upload de servidor (GitHub Actions).
+disponível) e hospeda no GitHub (repo público), devolvendo uma URL
+raw.githubusercontent.com que o Instagram aceita. Não depende de cadastro
+em serviços de imagem (que costumam bloquear contas/servidores).
 
 Injeção de dependência: as chamadas externas podem ser substituídas em testes.
 """
-import hashlib
 import time
 
 import requests
@@ -57,30 +57,25 @@ class ImageGenerator:
         return dados["data"][0]["b64_json"]
 
     def hospedar(self, b64: str) -> str:
-        """Hospeda a imagem no Cloudinary (upload assinado) e retorna a URL pública."""
+        """Sobe a imagem num repo público do GitHub e retorna a URL raw (aceita pelo Instagram)."""
         if self._hospedar_fn is not None:
             return self._hospedar_fn(b64=b64)
 
-        timestamp = str(int(time.time()))
-        # assinatura: sha1 dos parâmetros ordenados + api_secret
-        para_assinar = f"timestamp={timestamp}{config.CLOUDINARY_API_SECRET}"
-        assinatura = hashlib.sha1(para_assinar.encode()).hexdigest()
-
-        url = f"https://api.cloudinary.com/v1_1/{config.CLOUDINARY_CLOUD_NAME}/image/upload"
-        resp = requests.post(
-            url,
-            data={
-                "file": f"data:image/jpeg;base64,{b64}",
-                "api_key": config.CLOUDINARY_API_KEY,
-                "timestamp": timestamp,
-                "signature": assinatura,
+        nome = f"img_{int(time.time())}.jpg"
+        api = f"https://api.github.com/repos/{config.GH_IMAGES_REPO}/contents/{nome}"
+        resp = requests.put(
+            api,
+            headers={
+                "Authorization": f"token {config.GH_TOKEN}",
+                "Accept": "application/vnd.github+json",
             },
+            json={"message": f"imagem {nome}", "content": b64},
             timeout=60,
         )
         dados = resp.json()
-        if "secure_url" not in dados:
-            raise RuntimeError(f"Erro Cloudinary: {dados}")
-        return dados["secure_url"]
+        if "content" not in dados:
+            raise RuntimeError(f"Erro GitHub host: {dados}")
+        return f"https://raw.githubusercontent.com/{config.GH_IMAGES_REPO}/main/{nome}"
 
     def criar(self, prompt: str, produto_img_url: str = None) -> str:
         """Fluxo completo: prompt -> imagem -> URL pública."""
