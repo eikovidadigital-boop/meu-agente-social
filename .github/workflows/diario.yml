@@ -33,6 +33,8 @@ jobs:
           IG_ACCOUNT_ID: ${{ secrets.IG_ACCOUNT_ID }}
           FACEBOOK_PAGE_ID: ${{ secrets.FACEBOOK_PAGE_ID }}
           PAGE_ACCESS_TOKEN: ${{ secrets.PAGE_ACCESS_TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          GH_IMAGES_REPO: ${{ secrets.GH_IMAGES_REPO }}
         run: python run_diario.py
 
       - name: Salvar estado (banco + indice) de volta no repo
