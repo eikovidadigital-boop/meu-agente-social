@@ -1,17 +1,20 @@
 """
 Gerador de Imagens.
 Cria a imagem com gpt-image-1 (img2img a partir da foto do produto, quando
-disponível) e hospeda no ImgBB, devolvendo uma URL pública pronta para postar.
+disponível) e hospeda no catbox.moe, devolvendo uma URL pública que o
+Instagram aceita. catbox não exige cadastro nem chave.
 
 Injeção de dependência: as chamadas externas podem ser substituídas em testes.
 """
+import base64
+
 import requests
 
 from src import config
 
 OPENAI_EDITS = "https://api.openai.com/v1/images/edits"
 OPENAI_GENERATIONS = "https://api.openai.com/v1/images/generations"
-IMGBB_UPLOAD = "https://api.imgbb.com/1/upload"
+CATBOX_UPLOAD = "https://catbox.moe/user/api.php"
 
 
 class ImageGenerator:
@@ -54,19 +57,21 @@ class ImageGenerator:
         return dados["data"][0]["b64_json"]
 
     def hospedar(self, b64: str) -> str:
-        """Hospeda o base64 no ImgBB e retorna a URL pública."""
+        """Hospeda a imagem no catbox.moe e retorna a URL pública (aceita pelo Instagram)."""
         if self._hospedar_fn is not None:
             return self._hospedar_fn(b64=b64)
 
+        img_bytes = base64.b64decode(b64)
         resp = requests.post(
-            IMGBB_UPLOAD,
-            data={"key": config.IMGBB_API_KEY, "image": b64},
+            CATBOX_UPLOAD,
+            data={"reqtype": "fileupload"},
+            files={"fileToUpload": ("imagem.jpg", img_bytes, "image/jpeg")},
             timeout=60,
         )
-        dados = resp.json()
-        if not dados.get("success"):
-            raise RuntimeError(f"Erro ImgBB: {dados}")
-        return dados["data"]["url"]
+        url = resp.text.strip()
+        if not url.startswith("http"):
+            raise RuntimeError(f"Erro catbox: {url}")
+        return url
 
     def criar(self, prompt: str, produto_img_url: str = None) -> str:
         """Fluxo completo: prompt -> imagem -> URL pública."""
