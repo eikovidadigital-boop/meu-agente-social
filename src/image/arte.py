@@ -96,12 +96,24 @@ def _titulo_3d(base, xy, txt, fnt, prof=14, anchor="ma"):
 
 
 def _logo():
+    """Carrega o logo preservando as letras. Usa a transparência nativa do PNG;
+    só remove fundo branco se o PNG não tiver transparência (flood das bordas,
+    para nunca apagar as letras brancas internas)."""
     try:
         img = Image.open(config.LOGO_PATH).convert("RGBA")
-        arr = np.asarray(img).astype(np.int16)
-        branco = (arr[:, :, 0] > 235) & (arr[:, :, 1] > 235) & (arr[:, :, 2] > 235) & (arr[:, :, 3] > 0)
-        arr[branco, 3] = 0
-        return Image.fromarray(arr.astype(np.uint8), "RGBA")
+        arr = np.asarray(img)
+        if (arr[:, :, 3] == 0).mean() > 0.08:
+            return img  # já tem fundo transparente — usa direto (letras intactas)
+        from scipy import ndimage
+        rgb = arr[:, :, :3]
+        branco = (rgb[:, :, 0] > 235) & (rgb[:, :, 1] > 235) & (rgb[:, :, 2] > 235)
+        h, w = branco.shape
+        marca = np.zeros((h, w), bool)
+        marca[0, :] = marca[-1, :] = marca[:, 0] = marca[:, -1] = True
+        rot, _ = ndimage.label(branco)
+        ids = np.unique(rot[branco & marca]); ids = ids[ids != 0]
+        out = arr.copy(); out[np.isin(rot, ids), 3] = 0
+        return Image.fromarray(out, "RGBA")
     except Exception:
         return None
 
@@ -109,7 +121,7 @@ def _logo():
 def _fit_fonte(texto, fonte_path, tam_max, larg_max):
     """Reduz a fonte até o texto caber na largura."""
     t = tam_max
-    while t > 40:
+    while t > 22:
         f = _fz(fonte_path, t)
         if f.getbbox(texto)[2] <= larg_max:
             return f
@@ -129,15 +141,15 @@ def montar(produto_bytes: bytes, textos: dict, fundo_img: Image.Image = None,
     """
     base = _preparar_fundo(fundo_img, seed)
 
-    # produto recortado
+    # produto recortado, centralizado
     rgba = composer.bbox_conteudo(composer.recortar_produto(produto_bytes, usar_ia=usar_ia_recorte))
-    ph = int(H * 0.54); pw = int(rgba.width * ph / rgba.height)
+    ph = int(H * 0.50); pw = int(rgba.width * ph / rgba.height)
     prod = rgba.resize((pw, ph))
-    px = int(W * 0.56) - pw // 2; py = int(H * 0.97) - ph
+    px = W // 2 - pw // 2; py = int(H * 0.80) - ph
     base.alpha_composite(composer.sombra(prod), (px + 12, py + 18))
     base.alpha_composite(prod, (px, py))
 
-    # título em placa (fonte se ajusta à largura)
+    # título em placa (centralizado)
     _placa(base, [70, 65, W - 70, 320])
     f_tit = _fit_fonte(textos["titulo"], config.FONTE_TITULO, 118, W - 200)
     _titulo_3d(base, (W // 2, 90), textos["titulo"], f_tit, prof=14)
@@ -145,34 +157,16 @@ def montar(produto_bytes: bytes, textos: dict, fundo_img: Image.Image = None,
     f_sub = _fit_fonte(textos["subtitulo"], config.FONTE_TEXTO, 32, W - 200)
     d.text((W // 2, 250), textos["subtitulo"], font=f_sub, fill=CREME, anchor="ma")
 
-    # selo benefício + seta
-    benef = (textos.get("beneficio") or ["", "", ""])[:3]
-    while len(benef) < 3:
-        benef.append("")
-    _placa(base, [45, 420, 470, 605], r=18)
-    d.text((68, 442), benef[0], font=_fz(config.FONTE_TEXTO, 38), fill=CREME)
-    d.text((68, 490), benef[1], font=_fz(config.FONTE_TEXTO, 38), fill=VERDE_CLARO)
-    d.text((68, 540), benef[2], font=_fz(config.FONTE_TITULO, 44), fill=CREME)
-    d.arc([300, 595, 470, 760], start=200, end=330, fill=CREME, width=9)
-    d.polygon([(455, 690), (478, 735), (430, 728)], fill=CREME)
-
-    # tagline
-    tag = (textos.get("tagline") or ["100% NATURAL", "PRENSADO A FRIO"])[:2]
-    while len(tag) < 2:
-        tag.append("")
-    _placa(base, [560, H - 180, W - 40, H - 60], r=16)
-    d.text((778, H - 165), tag[0], font=_fz(config.FONTE_TEXTO, 34), fill=CREME, anchor="ma")
-    d.text((778, H - 118), tag[1], font=_fz(config.FONTE_TITULO, 40), fill=VERDE_CLARO, anchor="ma")
-
-    # logo
-    logo = _logo()
-    if logo is not None:
-        cx, cy, rad = 160, H - 120, 98
-        sel = Image.new("RGBA", (rad * 2 + 12, rad * 2 + 12), (0, 0, 0, 0))
-        ImageDraw.Draw(sel).ellipse([0, 0, rad * 2 + 12, rad * 2 + 12], fill=CREME + (255,))
-        base.alpha_composite(sel, (cx - rad - 6, cy - rad - 6))
-        lg = logo.resize((int(rad * 1.85), int(rad * 1.85)))
-        base.alpha_composite(lg, (cx - lg.width // 2, cy - lg.height // 2))
+    # QUADRO ÚNICO combinado (benefício + selo), centralizado no rodapé
+    benef = " ".join([b for b in (textos.get("beneficio") or []) if b]) or "100% NATURAL"
+    tag = " • ".join([t for t in (textos.get("tagline") or []) if t]) or "PRENSADO A FRIO"
+    qx0, qy0, qx1, qy1 = 130, H - 220, W - 130, H - 65
+    _placa(base, [qx0, qy0, qx1, qy1], r=20)
+    d = ImageDraw.Draw(base)
+    f_b = _fit_fonte(benef, config.FONTE_TEXTO, 46, qx1 - qx0 - 60)
+    d.text((W // 2, qy0 + 30), benef, font=f_b, fill=VERDE_CLARO, anchor="ma")
+    f_t = _fit_fonte(tag, config.FONTE_TITULO, 42, qx1 - qx0 - 60)
+    d.text((W // 2, qy0 + 92), tag, font=f_t, fill=CREME, anchor="ma")
 
     buf = io.BytesIO()
     base.convert("RGB").save(buf, format="JPEG", quality=92)
