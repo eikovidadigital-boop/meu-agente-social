@@ -81,3 +81,30 @@ class ImageGenerator:
         """Fluxo completo: prompt -> imagem -> URL pública."""
         b64 = self.gerar(prompt, produto_img_url)
         return self.hospedar(b64)
+
+    def montar_com_cenario(self, produto_bytes: bytes, indice: int = 0,
+                           usar_ia_recorte: bool = True) -> str:
+        """
+        Monta o post: recorta o produto REAL, gera um CENÁRIO com IA (sem produto),
+        junta os dois com um layout que rotaciona, hospeda e devolve a URL.
+        O produto nunca é alterado — só o cenário é gerado.
+        """
+        import base64
+        import io
+
+        from PIL import Image
+
+        from src.image import composer
+
+        # 1) recorta o produto real (rótulo preservado)
+        recorte = composer.recortar_produto(produto_bytes, usar_ia=usar_ia_recorte)
+        # 2) gera só o cenário (texto -> imagem, sem produto)
+        cenario_prompt = composer.escolher_cenario(indice)
+        b64_fundo = self.gerar(cenario_prompt)  # text2img
+        fundo = Image.open(io.BytesIO(base64.b64decode(b64_fundo)))
+        # 3) junta com o layout do dia
+        layout = composer.escolher_layout(indice)
+        jpeg = composer.compor(recorte, fundo, layout)
+        # 4) hospeda e devolve a URL
+        return self.hospedar(base64.b64encode(jpeg).decode())
+
