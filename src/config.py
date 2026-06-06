@@ -18,6 +18,11 @@ CHUNK_TAMANHO = 500          # tamanho alvo de cada chunk (em palavras aproximad
 CHUNK_SOBREPOSICAO = 50      # sobreposição entre chunks (mantém contexto)
 BUSCA_TOP_K = 5              # quantos trechos a busca retorna
 
+# Catálogo de produtos reais (imagens verdadeiras do Shopify)
+CATALOGO_PATH = Path(os.environ.get("CATALOGO_PATH", RAIZ / "dados" / "catalogo.txt"))
+# Loja Shopify: se preenchida, o sistema puxa os produtos automaticamente
+SHOPIFY_LOJA = os.environ.get("SHOPIFY_LOJA", "https://eikovida.com")
+
 # Credenciais externas (preenchidas via ambiente/GitHub Secrets)
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")

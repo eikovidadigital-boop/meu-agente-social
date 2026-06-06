@@ -1,11 +1,17 @@
 """
 Pipeline diário — amarra todos os módulos no fluxo automático.
-Indexa o vault, gera o conteúdo (ideia, legenda, hashtags, imagem),
-salva, agenda e publica. Dependências injetáveis para teste.
+Indexa o vault, escolhe um produto real do catálogo, MONTA a imagem
+(produto real recortado + cenário gerado por IA, com layout que rotaciona),
+gera legenda e hashtags, salva, agenda e publica.
+O produto nunca é alterado pela IA. Dependências injetáveis para teste.
 """
+import base64
 from datetime import datetime
 
-from src.agents import captions, hashtags, ideas, image_prompt
+import requests
+
+from src import catalogo
+from src.agents import captions, hashtags, ideas
 from src.image.generator import ImageGenerator
 from src.rag import indexer
 from src.social.facebook import FacebookPublisher
@@ -22,47 +28,74 @@ def objetivo_do_dia() -> str:
     return "Conteúdo de conversão que apresenta um produto e gera vendas"
 
 
+def _baixar(url: str) -> bytes:
+    r = requests.get(url, timeout=30)
+    r.raise_for_status()
+    return r.content
+
+
 def executar_diario(objetivo=None, plataformas=("instagram", "facebook"),
                     produto_img_url=None, base_hashtags=None,
-                    llm=None, image_gen=None, publisher=None, indexar=True) -> dict:
+                    llm=None, image_gen=None, publisher=None, indexar=True,
+                    produtos=None, baixar_fn=None) -> dict:
     """
-    Executa o ciclo diário completo.
-    Retorna um resumo do que foi gerado e publicado.
+    Executa o ciclo diário completo, montando a imagem (produto real + cenário IA).
     """
     objetivo = objetivo or objetivo_do_dia()
     base_hashtags = base_hashtags or ["#eikovida"]
+    baixar_fn = baixar_fn or _baixar
+    image_gen = image_gen or ImageGenerator()
 
     db.init_db()
     if indexar:
         indexer.indexar_vault()
 
-    # 1) Ideia do dia
-    lista = ideas.gerar_ideias(objetivo, n=1, llm=llm)
-    ideia = lista[0] if lista else objetivo
+    # 1) Produto real do catálogo (rotaciona por dia)
+    if produtos is None:
+        try:
+            produtos = catalogo.carregar_do_shopify()   # puxa do Shopify automaticamente
+        except Exception:
+            produtos = []
+        if not produtos:
+            produtos = catalogo.carregar()               # reserva: arquivo manual
+    indice = datetime.now().timetuple().tm_yday
+    produto = catalogo.escolher(produtos, indice)
 
-    # 2) Imagem (uma só, reaproveitada nas plataformas — feed coeso)
-    prompt = image_prompt.gerar_prompt_imagem(ideia, llm=llm)
-    image_gen = image_gen or ImageGenerator()
-    imagem_url = image_gen.criar(prompt, produto_img_url)
+    if produto:
+        produto_url = produto["imagem"]
+        contexto_produto = f"Produto em foco: {produto['nome']}. {produto['info']}"
+    else:
+        produto_url = produto_img_url
+        contexto_produto = ""
 
-    # 3) Conteúdo por plataforma
+    # 2) Monta a imagem: produto real recortado + cenário gerado por IA
+    produto_bytes = baixar_fn(produto_url)
+    imagem_url = image_gen.montar_com_cenario(produto_bytes, indice=indice)
+
+    # 3) Ideia do dia, focada no produto
+    obj = f"{objetivo} {contexto_produto}".strip()
+    lista = ideas.gerar_ideias(obj, n=1, llm=llm)
+    ideia = lista[0] if lista else obj
+
+    # 4) Conteúdo por plataforma (mesma imagem montada)
     conteudos = []
     for plataforma in plataformas:
         legenda = captions.gerar_legenda(ideia, plataforma, llm=llm)
         tags = hashtags.gerar_hashtags(ideia, base=base_hashtags, llm=llm)
         cid = db.salvar_conteudo(
             plataforma=plataforma, ideia=ideia, legenda=legenda,
-            hashtags=tags, prompt_imagem=prompt, imagem_url=imagem_url, status="pronto",
+            hashtags=tags, prompt_imagem="", imagem_url=imagem_url, status="pronto",
         )
         db.agendar_publicacao(cid, plataforma)
         conteudos.append(cid)
 
-    # 4) Publica os pendentes
+    # 5) Publica os pendentes
     publisher = publisher or Publisher([InstagramPublisher(), FacebookPublisher()])
     resultados = publisher.publicar_pendentes()
 
     return {
         "objetivo": objetivo,
+        "produto": produto["nome"] if produto else None,
         "ideia": ideia,
         "imagem_url": imagem_url,
         "conteudos": conteudos,
