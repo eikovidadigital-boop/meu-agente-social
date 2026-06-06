@@ -11,7 +11,7 @@ from datetime import datetime
 import requests
 
 from src import catalogo
-from src.agents import captions, hashtags, ideas
+from src.agents import arte_textos, captions, hashtags, ideas
 from src.image.generator import ImageGenerator
 from src.rag import indexer
 from src.social.facebook import FacebookPublisher
@@ -68,9 +68,12 @@ def executar_diario(objetivo=None, plataformas=("instagram", "facebook"),
         produto_url = produto_img_url
         contexto_produto = ""
 
-    # 2) Monta a imagem: produto real recortado + cenário gerado por IA
+    # 2) Monta a imagem: produto real recortado + cenário IA + arte (título, selo, logo)
     produto_bytes = baixar_fn(produto_url)
-    imagem_url = image_gen.montar_com_cenario(produto_bytes, indice=indice)
+    nome_prod = produto["nome"] if produto else "Óleo Natural"
+    info_prod = produto["info"] if produto else ""
+    textos_arte = arte_textos.gerar_textos(nome_prod, info_prod, llm=llm)
+    imagem_url = image_gen.montar_com_cenario(produto_bytes, textos=textos_arte, indice=indice)
 
     # 3) Ideia do dia, focada no produto
     obj = f"{objetivo} {contexto_produto}".strip()

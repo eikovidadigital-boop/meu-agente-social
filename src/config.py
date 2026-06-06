@@ -13,6 +13,13 @@ DATA_DIR = Path(os.environ.get("DATA_DIR", RAIZ / "data"))
 CHROMA_DIR = DATA_DIR / "chroma"
 DB_PATH = DATA_DIR / "agente.db"
 
+# Assets da arte (fontes e logo) — versionados no repo
+ASSETS_DIR = Path(os.environ.get("ASSETS_DIR", RAIZ / "assets"))
+FONTE_TITULO = ASSETS_DIR / "fontes" / "Anton.ttf"
+FONTE_TEXTO = ASSETS_DIR / "fontes" / "Montserrat-ExtraBold.ttf"
+LOGO_PATH = ASSETS_DIR / "logo.png"
+
+
 # RAG
 CHUNK_TAMANHO = 500          # tamanho alvo de cada chunk (em palavras aproximadas)
 CHUNK_SOBREPOSICAO = 50      # sobreposição entre chunks (mantém contexto)

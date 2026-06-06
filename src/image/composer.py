@@ -1,121 +1,81 @@
 """
-Compositor de imagens.
-Monta o post juntando:
-  1) o PRODUTO REAL recortado (rótulo preservado — nunca gerado por IA)
-  2) um CENÁRIO atrativo (gerado por IA, sem produto, ou imagem de fundo)
-Com vários LAYOUTS de posição/tamanho que se alternam, pra o feed não ficar
-repetitivo.
-
-Recorte do produto: usa rembg (recorte por IA) quando disponível; se não,
-cai no recorte por fundo branco/sólido (mais leve), bom para fotos de catálogo.
+Recorte do produto real (rótulo nunca alterado por IA).
+Usa rembg quando disponível; senão, recorte por fundo claro de qualidade,
+com alpha PARCIAL para splashes translúcidos (some o fundo branco do splash)
+e produto sólido preservado (não fura o rótulo).
 """
 import io
 
+import numpy as np
 from PIL import Image, ImageFilter
+from scipy import ndimage
 
-CANVAS = 1024  # post quadrado 1:1
 
-
-# ---------------- Recorte do produto ----------------
-def _recorte_rembg(dados: bytes):
+def _recorte_rembg(dados: bytes) -> Image.Image:
     from rembg import remove
-    saida = remove(dados)
-    return Image.open(io.BytesIO(saida)).convert("RGBA")
+    return Image.open(io.BytesIO(remove(dados))).convert("RGBA")
 
 
-def _recorte_fundo_solido(dados: bytes, tolerancia: int = 28) -> Image.Image:
-    """Remove fundo sólido (branco) detectado pelos cantos. Para fotos de catálogo."""
-    img = Image.open(io.BytesIO(dados)).convert("RGBA")
-    px = img.load()
-    w, h = img.size
-    cantos = [px[0, 0], px[w - 1, 0], px[0, h - 1], px[w - 1, h - 1]]
-    fr = sum(c[0] for c in cantos) // 4
-    fg = sum(c[1] for c in cantos) // 4
-    fb = sum(c[2] for c in cantos) // 4
-    dados_px = img.getdata()
-    novo = []
-    for r, g, b, a in dados_px:
-        if abs(r - fr) <= tolerancia and abs(g - fg) <= tolerancia and abs(b - fb) <= tolerancia:
-            novo.append((r, g, b, 0))
-        else:
-            novo.append((r, g, b, a))
-    img.putdata(novo)
-    return img
+def _recorte_fundo(dados: bytes, tol: int = 38) -> Image.Image:
+    """Recorte por fundo claro: produto sólido opaco + splash translúcido."""
+    img = Image.open(io.BytesIO(dados)).convert("RGB")
+    arr = np.asarray(img).astype(np.float32)
+    h, w, _ = arr.shape
+
+    s = 8
+    cantos = np.concatenate([arr[:s, :s].reshape(-1, 3), arr[:s, -s:].reshape(-1, 3),
+                             arr[-s:, :s].reshape(-1, 3), arr[-s:, -s:].reshape(-1, 3)])
+    fundo = cantos.mean(axis=0)
+    dist = np.sqrt(((arr - fundo) ** 2).sum(axis=2))
+
+    candidato = dist <= tol
+    marca = np.zeros((h, w), bool)
+    marca[0, :] = marca[-1, :] = marca[:, 0] = marca[:, -1] = True
+    rot, _ = ndimage.label(candidato)
+    ids = np.unique(rot[candidato & marca]); ids = ids[ids != 0]
+    fundo_ext = np.isin(rot, ids)
+
+    nao_fundo = ~fundo_ext
+    corpo = ndimage.binary_dilation(ndimage.binary_erosion(nao_fundo, iterations=6), iterations=6)
+
+    alpha = np.clip((dist - 18) / 95.0, 0, 1) ** 0.8
+    alpha[corpo] = 1.0
+    sel = fundo_ext & ~corpo
+    alpha[sel] = np.minimum(alpha[sel], np.clip((dist[sel] - 30) / 90.0, 0, 1))
+    alpha = (alpha * 255).astype(np.uint8)
+    alpha_img = Image.fromarray(alpha, "L").filter(ImageFilter.GaussianBlur(0.8))
+
+    rgba = img.convert("RGBA"); rgba.putalpha(alpha_img)
+    return rgba
 
 
 def recortar_produto(dados: bytes, usar_ia: bool = True) -> Image.Image:
-    """Recorta o produto, devolvendo RGBA com fundo transparente."""
     if usar_ia:
         try:
             return _recorte_rembg(dados)
         except Exception:
-            pass  # cai no método leve
-    return _recorte_fundo_solido(dados)
+            pass
+    return _recorte_fundo(dados)
 
 
-def _bbox_conteudo(rgba: Image.Image) -> Image.Image:
-    """Corta as bordas transparentes, deixando só o produto."""
+def bbox_conteudo(rgba: Image.Image) -> Image.Image:
     bbox = rgba.split()[-1].getbbox()
     return rgba.crop(bbox) if bbox else rgba
 
 
-# ---------------- Layouts (posição/tamanho do produto) ----------------
-# escala = altura do produto relativa ao canvas; ancora = ponto de referência (0-1)
-LAYOUTS = [
-    {"nome": "centro_baixo",     "escala": 0.66, "cx": 0.50, "base": 0.92},
-    {"nome": "esquerda",         "escala": 0.60, "cx": 0.32, "base": 0.90},
-    {"nome": "direita",          "escala": 0.60, "cx": 0.68, "base": 0.90},
-    {"nome": "grande_centro",    "escala": 0.78, "cx": 0.50, "base": 0.96},
-    {"nome": "canto_inferior",   "escala": 0.52, "cx": 0.72, "base": 0.95},
-]
-
-
-def escolher_layout(indice: int) -> dict:
-    return LAYOUTS[indice % len(LAYOUTS)]
-
-
-def _sombra(produto: Image.Image) -> Image.Image:
-    """Cria uma sombra suave a partir do recorte."""
+def sombra(produto: Image.Image, blur: int = 18, op: int = 120) -> Image.Image:
     alpha = produto.split()[-1]
-    sombra = Image.new("RGBA", produto.size, (0, 0, 0, 0))
-    preto = Image.new("RGBA", produto.size, (0, 0, 0, 120))
-    sombra.paste(preto, (0, 0), alpha)
-    return sombra.filter(ImageFilter.GaussianBlur(18))
+    s = Image.new("RGBA", produto.size, (0, 0, 0, 0))
+    s.paste(Image.new("RGBA", produto.size, (0, 0, 0, op)), (0, 0), alpha)
+    return s.filter(ImageFilter.GaussianBlur(blur))
 
 
-def compor(produto_rgba: Image.Image, fundo: Image.Image, layout: dict,
-           com_sombra: bool = True) -> bytes:
-    """Junta produto + cenário num quadrado 1024 e devolve JPEG (bytes)."""
-    fundo = fundo.convert("RGB").resize((CANVAS, CANVAS))
-    canvas = fundo.convert("RGBA")
-
-    prod = _bbox_conteudo(produto_rgba)
-    alvo_h = int(CANVAS * layout["escala"])
-    prop = alvo_h / prod.height
-    prod = prod.resize((max(1, int(prod.width * prop)), alvo_h))
-
-    cx = int(CANVAS * layout["cx"])
-    base_y = int(CANVAS * layout["base"])
-    x = cx - prod.width // 2
-    y = base_y - prod.height
-
-    if com_sombra:
-        sombra = _sombra(prod)
-        canvas.alpha_composite(sombra, (x + 12, y + 18))
-    canvas.alpha_composite(prod, (x, y))
-
-    buf = io.BytesIO()
-    canvas.convert("RGB").save(buf, format="JPEG", quality=90)
-    return buf.getvalue()
-
-
-# ---------------- Cenários (prompts pra IA gerar o fundo, SEM produto) ----------------
+# Cenários (prompt para a IA gerar o FUNDO, sem produto) — fundo rico e premium
 CENARIOS = [
-    "fundo de bancada de madeira clara com folhas verdes desfocadas ao redor, luz natural suave, estilo natural e aconchegante, SEM nenhum produto ou objeto no centro, espaço vazio",
-    "fundo de spa minimalista, pedras e toalha branca, tons neutros e verdes, luz suave difusa, SEM produto, espaço central livre",
-    "fundo de mármore branco com plantas tropicais nas laterais, iluminação clara e elegante, SEM produto, centro vazio",
-    "fundo de natureza amazônica desfocada, folhagens verdes e luz dourada de fim de tarde, atmosfera orgânica, SEM produto, espaço central livre",
-    "fundo de banheiro clean e moderno, prateleira de madeira, plantinhas, tons terrosos e verdes, luz suave, SEM produto, centro livre",
+    "fundo escuro premium de natureza com folhagens verdes desfocadas e luz dourada suave em bokeh, atmosfera orgânica e elegante, SEM nenhum produto, centro com espaço livre, vertical",
+    "fundo escuro de madeira rústica com folhas e luz quente difusa em bokeh dourado, clima natural e aconchegante, SEM produto, centro livre, vertical",
+    "fundo escuro de floresta amazônica desfocada com raios de luz dourada de fim de tarde, partículas brilhantes, SEM produto, espaço central livre, vertical",
+    "fundo escuro elegante tom verde e marrom com folhas tropicais desfocadas e brilho dourado suave, SEM produto, centro livre, vertical",
 ]
 
 

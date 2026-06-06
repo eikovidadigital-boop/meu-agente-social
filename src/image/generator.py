@@ -82,29 +82,32 @@ class ImageGenerator:
         b64 = self.gerar(prompt, produto_img_url)
         return self.hospedar(b64)
 
-    def montar_com_cenario(self, produto_bytes: bytes, indice: int = 0,
-                           usar_ia_recorte: bool = True) -> str:
+    def montar_com_cenario(self, produto_bytes: bytes, textos: dict = None,
+                           indice: int = 0, usar_ia_recorte: bool = True) -> str:
         """
-        Monta o post: recorta o produto REAL, gera um CENÁRIO com IA (sem produto),
-        junta os dois com um layout que rotaciona, hospeda e devolve a URL.
-        O produto nunca é alterado — só o cenário é gerado.
+        Monta o post 4:5: produto REAL recortado + cenário gerado por IA + arte
+        (título 3D, selo de benefício, tagline, logo). O produto nunca é alterado.
+        `textos` vem do agente arte_textos; se None, a arte usa um texto de reserva.
         """
         import base64
         import io
 
         from PIL import Image
 
-        from src.image import composer
+        from src.image import arte, composer
 
-        # 1) recorta o produto real (rótulo preservado)
-        recorte = composer.recortar_produto(produto_bytes, usar_ia=usar_ia_recorte)
-        # 2) gera só o cenário (texto -> imagem, sem produto)
+        # 1) gera só o cenário/fundo (sem produto)
         cenario_prompt = composer.escolher_cenario(indice)
-        b64_fundo = self.gerar(cenario_prompt)  # text2img
-        fundo = Image.open(io.BytesIO(base64.b64decode(b64_fundo)))
-        # 3) junta com o layout do dia
-        layout = composer.escolher_layout(indice)
-        jpeg = composer.compor(recorte, fundo, layout)
-        # 4) hospeda e devolve a URL
-        return self.hospedar(base64.b64encode(jpeg).decode())
+        try:
+            b64_fundo = self.gerar(cenario_prompt)  # text2img
+            fundo = Image.open(io.BytesIO(base64.b64decode(b64_fundo)))
+        except Exception:
+            fundo = None  # arte usa fundo de reserva
 
+        # 2) monta a arte completa (produto recortado + texto + logo sobre o fundo)
+        textos = textos or {}
+        jpeg = arte.montar(produto_bytes, textos, fundo_img=fundo,
+                           seed=indice, usar_ia_recorte=usar_ia_recorte)
+
+        # 3) hospeda e devolve a URL pública
+        return self.hospedar(base64.b64encode(jpeg).decode())
