@@ -70,6 +70,27 @@ def sombra(produto: Image.Image, blur: int = 18, op: int = 120) -> Image.Image:
     return s.filter(ImageFilter.GaussianBlur(blur))
 
 
+
+def score_recorte(dados: bytes) -> float:
+    """
+    Mede o quanto a imagem é DIFÍCIL de recortar por splash branco/cinza
+    (claro + pouca cor + diferente do fundo). Menor = mais limpa = melhor.
+    Splash COLORIDO não é penalizado (recorta bem). Serve para escolher,
+    entre as fotos de um produto, a melhor para o post.
+    """
+    img = Image.open(io.BytesIO(dados)).convert("RGB")
+    arr = np.asarray(img).astype(np.float32)
+    mx = arr.max(axis=2); mn = arr.min(axis=2)
+    lum = arr.mean(axis=2)
+    sat = np.where(mx > 0, (mx - mn) / np.maximum(mx, 1), 0)
+    s = 8
+    cantos = np.concatenate([arr[:s, :s].reshape(-1, 3), arr[:s, -s:].reshape(-1, 3),
+                             arr[-s:, :s].reshape(-1, 3), arr[-s:, -s:].reshape(-1, 3)])
+    fundo = cantos.mean(axis=0)
+    dist = np.sqrt(((arr - fundo) ** 2).sum(axis=2))
+    problema = (lum > 170) & (sat < 0.18) & (dist > 15) & (dist < 90)
+    return float(problema.mean())
+
 # Cenários (prompt para a IA gerar o FUNDO, sem produto) — fundo rico e premium
 CENARIOS = [
     "fundo escuro premium de natureza com folhagens verdes desfocadas e luz dourada suave em bokeh, atmosfera orgânica e elegante, SEM nenhum produto, centro com espaço livre, vertical",

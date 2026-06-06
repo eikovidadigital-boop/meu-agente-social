@@ -69,7 +69,11 @@ def executar_diario(objetivo=None, plataformas=("instagram", "facebook"),
         contexto_produto = ""
 
     # 2) Monta a imagem: produto real recortado + cenário IA + arte (título, selo, logo)
-    produto_bytes = baixar_fn(produto_url)
+    #    escolhe automaticamente a foto mais limpa do produto (evita splash branco)
+    if produto:
+        produto_bytes = catalogo.melhor_imagem(produto, baixar_fn)
+    else:
+        produto_bytes = baixar_fn(produto_url)
     nome_prod = produto["nome"] if produto else "Óleo Natural"
     info_prod = produto["info"] if produto else ""
     textos_arte = arte_textos.gerar_textos(nome_prod, info_prod, llm=llm)
