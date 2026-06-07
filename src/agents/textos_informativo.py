@@ -95,3 +95,35 @@ def gerar_textos(nome: str, info: str, foco: str, llm) -> dict:
     limpos = _limpar(campos, foco)
     limpos["nome"] = nome
     return limpos
+
+
+def gerar_textos_kit(nome_kit: str, itens: list, llm=None) -> dict:
+    """Textos do KIT (layout 3). Sempre cosmetico/combo, sem claim de saude.
+    Se qualquer item do kit for sensivel (copaiba/sucupira/andiroba), mantem 100% cosmetico."""
+    sensivel = any(eh_sensivel(i) for i in (itens or []))
+    base = dict(
+        tagline3=["Ritual", "Completo", "Natural"],
+        descricao=f"{len(itens)} óleos 100% puros para o seu ritual de cuidado.",
+    )
+    if llm is not None:
+        prompt = (
+            f"Escreva textos curtos para um KIT da EikoVida chamado '{nome_kit}', com os óleos: {', '.join(itens)}.\n"
+            f"{REGRAS}"
+            + (ANVISA if sensivel else "") +
+            "Foque em 'combo/ritual de cuidado/presente'. Nada de efeito terapeutico.\n"
+            'Responda APENAS JSON: {"tagline3":["a","b","c"],"descricao":"uma frase"}'
+        )
+        try:
+            import json as _json
+            resp = llm.responder(prompt) if hasattr(llm, "responder") else llm(prompt)
+            c = _json.loads(resp.strip().replace("```json","").replace("```","").strip())
+            tg = [p for p in c.get("tagline3", [])[:3] if revisar(p).ok]
+            for p in base["tagline3"]:
+                if len(tg) >= 3: break
+                if p not in tg: tg.append(p)
+            base["tagline3"] = tg[:3]
+            base["descricao"] = garantir(c.get("descricao",""), base["descricao"])
+        except Exception:
+            pass
+    base["nome"] = nome_kit
+    return base

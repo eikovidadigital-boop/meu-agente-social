@@ -59,3 +59,29 @@ beneficio = garantir(beneficio_gerado, fallback="100% puro e natural")
 ## Fora do robô
 A página do produto no eikovida.com também é avaliada pelo Meta/Google.
 Revisar os textos da loja com a mesma régua — principalmente copaíba, sucupira e andiroba.
+
+---
+
+# Layout 3 — KIT (vários frascos)
+
+- `src/image/arte_kit.py` — `montar_kit(produtos_rgba, nome, itens, tagline3, descricao)`.
+  Exige 2+ frascos (produto único vai pro layout 1/2).
+- `src/agents/textos_informativo.py` → `gerar_textos_kit(nome_kit, itens, llm)`:
+  sempre cosmético/combo, sem claim de saúde. Se algum item for copaíba/sucupira/andiroba,
+  mantém 100% cosmético.
+
+No `pipeline.py`, quando `escolher_layout(produto.eh_kit, indice) == "kit"`:
+```python
+from src.image.arte_kit import montar_kit
+from src.agents.textos_informativo import gerar_textos_kit
+t = gerar_textos_kit(kit.nome, kit.itens, llm)
+arte = montar_kit(frascos_recortados, nome=t["nome"], itens=kit.itens,
+                  tagline3=t["tagline3"], descricao=t["descricao"])
+```
+`frascos_recortados` = lista com o recorte de cada óleo do kit.
+
+## Resumo dos 3 layouts
+- Layout 1 (dramático/escuro) — produto único.
+- Layout 2 (informativo/claro) — produto único. Alterna com o 1.
+- Layout 3 (kit) — só kits.
+Compliance roda em todos. Copaíba/sucupira/andiroba nunca usam foco saúde.
