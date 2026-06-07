@@ -11,6 +11,7 @@ from src.image import composer
 from src.image.story_arte import montar_story
 from src.agents.textos_informativo import gerar_textos
 from src.compliance import focos_permitidos
+from src.image.foto import melhor_recorte, urls_produto
 
 try:
     from src.agents.arte_textos import escolher_foco
@@ -68,12 +69,11 @@ def main():
 
     indice = datetime.now().timetuple().tm_yday
     n = len(produtos)
-    produto = url = None
+    produto = None
     for passo in range(n):
         cand = produtos[(indice + passo) % n]
-        u = _url_imagem(cand)
-        if u:
-            produto, url = cand, u
+        if urls_produto(cand):
+            produto = cand
             break
     if not produto:
         raise SystemExit("ERRO: nenhum produto com imagem.")
@@ -84,8 +84,11 @@ def main():
     if foco not in permitidos:
         foco = permitidos[0]
 
-    dados = requests.get(url, timeout=30).content
-    frasco = composer.bbox_conteudo(composer.recortar_produto(dados, usar_ia=False))
+    # escolhe a FOTO MAIS LIMPA do produto (sem splash), igual ao feed
+    frasco, sc = melhor_recorte(produto, lambda u: requests.get(u, timeout=30).content, composer)
+    if frasco is None:
+        raise SystemExit("ERRO: nao consegui recortar nenhuma foto.")
+    print(f"Foto escolhida (score {sc:.2f})")
     t = gerar_textos(nome, "", foco, None)
     montar_story(frasco, nome, foco, t["tagline3"]).save("story_teste.png")
     print(f"OK -> story_teste.png | produto: {nome} | foco: {foco}")
