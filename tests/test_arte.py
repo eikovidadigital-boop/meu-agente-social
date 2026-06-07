@@ -37,10 +37,19 @@ def test_arte_usa_fundo_da_ia():
 
 
 def test_arte_textos_fallback_completo():
-    d = arte_textos._fallback("Óleo de Pequi")
-    for k in ("titulo", "subtitulo", "beneficio", "tagline"):
+    d = arte_textos._fallback("Óleo de Pequi", arte_textos.FOCOS[0])
+    for k in ("titulo", "subtitulo", "beneficio", "tagline", "foco"):
         assert k in d
     assert len(d["beneficio"]) == 3 and len(d["tagline"]) == 2
+
+
+def test_arte_textos_foco_alterna():
+    # o mesmo produto (mesma posição) recebe focos diferentes a cada volta
+    f1 = arte_textos.escolher_foco(5, 8)
+    f2 = arte_textos.escolher_foco(13, 8)
+    f3 = arte_textos.escolher_foco(21, 8)
+    assert f1["id"] != f2["id"] != f3["id"]
+    assert {f1["id"], f2["id"], f3["id"]} == {"PELE", "CABELO", "SAUDE"}
 
 
 def test_arte_textos_parse_json():
@@ -49,6 +58,7 @@ def test_arte_textos_parse_json():
         def gerar(self, prompt, system="", max_tokens=400):
             return ('{"titulo":"ÓLEO X","subtitulo":"SUB","beneficio":["A","B","C"],'
                     '"tagline":["L1","L2"]}')
-    d = arte_textos.gerar_textos("Óleo X", "info", llm=FakeLLM())
+    d = arte_textos.gerar_textos("Óleo X", "info", foco=arte_textos.FOCOS[2], llm=FakeLLM())
     assert d["titulo"] == "ÓLEO X"
     assert len(d["beneficio"]) == 3
+    assert d["foco"] == "SAUDE"

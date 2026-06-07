@@ -60,6 +60,8 @@ def executar_diario(objetivo=None, plataformas=("instagram", "facebook"),
             produtos = catalogo.carregar()               # reserva: arquivo manual
     indice = datetime.now().timetuple().tm_yday
     produto = catalogo.escolher(produtos, indice)
+    # foco do post (pele/cabelo/saúde) — alterna a cada vez que o produto reaparece
+    foco = arte_textos.escolher_foco(indice, len(produtos) if produtos else 1)
 
     if produto:
         produto_url = produto["imagem"]
@@ -76,18 +78,18 @@ def executar_diario(objetivo=None, plataformas=("instagram", "facebook"),
         produto_bytes = baixar_fn(produto_url)
     nome_prod = produto["nome"] if produto else "Óleo Natural"
     info_prod = produto["info"] if produto else ""
-    textos_arte = arte_textos.gerar_textos(nome_prod, info_prod, llm=llm)
+    textos_arte = arte_textos.gerar_textos(nome_prod, info_prod, foco=foco, llm=llm)
     imagem_url = image_gen.montar_com_cenario(produto_bytes, textos=textos_arte, indice=indice)
 
-    # 3) Ideia do dia, focada no produto
-    obj = f"{objetivo} {contexto_produto}".strip()
+    # 3) Ideia do dia, focada no produto E no ângulo escolhido (pele/cabelo/saúde)
+    obj = f"{objetivo} {contexto_produto} Ângulo do post: {foco['rotulo']} (NÃO misturar saúde com beleza).".strip()
     lista = ideas.gerar_ideias(obj, n=1, llm=llm)
     ideia = lista[0] if lista else obj
 
-    # 4) Conteúdo por plataforma (mesma imagem montada)
+    # 4) Conteúdo por plataforma (mesma imagem montada, mesmo foco)
     conteudos = []
     for plataforma in plataformas:
-        legenda = captions.gerar_legenda(ideia, plataforma, llm=llm)
+        legenda = captions.gerar_legenda(ideia, plataforma, foco=foco["id"], llm=llm)
         tags = hashtags.gerar_hashtags(ideia, base=base_hashtags, llm=llm)
         cid = db.salvar_conteudo(
             plataforma=plataforma, ideia=ideia, legenda=legenda,
