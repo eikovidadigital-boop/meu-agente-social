@@ -56,7 +56,7 @@ def _halo(cx, cy, r=460):
     arr[..., 3] = (a*150).astype(np.uint8)
     return Image.fromarray(arr, "RGBA")
 
-def montar_story(produto_rgba, nome, foco, tagline3, cta="eikovida.com", selo="PRODUTO DO DIA"):
+def montar_story(produto_rgba, nome, foco, tagline3, cta="ACESSE O LINK NA BIO", selo="PRODUTO DO DIA"):
     img = Image.new("RGB", (SW, SH), CREME)
     noise = (np.random.rand(SH, SW, 1)*8).astype(np.uint8)
     img = Image.fromarray(np.clip(np.array(img).astype(np.int16)-4+noise, 0, 255).astype(np.uint8), "RGB").convert("RGBA")
@@ -102,12 +102,19 @@ def montar_story(produto_rgba, nome, foco, tagline3, cta="eikovida.com", selo="P
     img.alpha_composite(pr.convert("RGBA"), (fx, fy))
     d = ImageDraw.Draw(img)
 
-    # CTA
+    # CTA -> sempre direciona para a BIO (sem link, sem figurinha)
     cy2 = BASE_SEG-205
     _texto_tracking(d, cy2, "100% PURO E NATURAL • PRENSADO A FRIO", mont(24,700), VERDE_ESC, tracking=2)
-    bw, bh = 580, 94; bx = cx-bw//2; byy = cy2+50
+    bw, bh = 600, 96; bx = cx-bw//2; byy = cy2+50
     d.rounded_rectangle([bx, byy, bx+bw, byy+bh], radius=bh//2, fill=MARROM)
-    d.text((cx, byy+bh//2), f"Compre em  {cta}", font=mont(31,800), fill=CREME, anchor="mm")
+    # seta para cima (a bio fica no topo do perfil) + texto, fonte ajustada pra caber
+    fsz = 32
+    while d.textlength(cta, font=mont(fsz, 800)) > bw-90 and fsz > 20:
+        fsz -= 1
+    fb = mont(fsz, 800)
+    tw = d.textlength(cta, font=fb); ax = cx - tw/2 - 34; ay = byy + bh/2
+    d.polygon([(ax, ay+10), (ax+24, ay+10), (ax+12, ay-12)], fill=CREME)   # triangulo p/ cima
+    d.text((cx+18, ay), cta, font=fb, fill=CREME, anchor="mm")
     return img.convert("RGB")
 
 if __name__ == "__main__":
