@@ -15,8 +15,8 @@ jobs:
       GH_TOKEN: ${{ secrets.GH_TOKEN }}
       GH_IMAGES_REPO: ${{ secrets.GH_IMAGES_REPO }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
       - name: Instalar dependencias
