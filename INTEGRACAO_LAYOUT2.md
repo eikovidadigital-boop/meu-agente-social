@@ -85,3 +85,37 @@ arte = montar_kit(frascos_recortados, nome=t["nome"], itens=kit.itens,
 - Layout 2 (informativo/claro) — produto único. Alterna com o 1.
 - Layout 3 (kit) — só kits.
 Compliance roda em todos. Copaíba/sucupira/andiroba nunca usam foco saúde.
+
+---
+
+# Story 9:16 (automático, junto com o feed)
+
+- `src/image/story_arte.py` → `montar_story(produto_rgba, nome, foco, tagline3, cta="eikovida.com")`.
+  Formato 1080x1920, frasco protagonista, folhas naturais no fundo, conteúdo na zona segura.
+  Reusa o MESMO frasco recortado, foco e tagline do post do dia (compliance já aplicado).
+
+## No `pipeline.py` — depois de montar e publicar o post do feed:
+```python
+from src.image.story_arte import montar_story
+
+story = montar_story(frasco_recortado, nome=produto.nome, foco=foco, tagline3=t["tagline3"])
+url_story = hospedar(story)          # mesma hospedagem que você já usa (raw.githubusercontent)
+publicar_story(url_story)            # ver função abaixo
+```
+
+## Publicar story pela API (mesma do feed, muda só o tipo)
+```python
+def publicar_story(image_url):
+    # 1) cria container com media_type=STORIES (story NAO usa caption)
+    c = requests.post(f"https://graph.facebook.com/v21.0/{IG_USER_ID}/media",
+        data={"image_url": image_url, "media_type": "STORIES", "access_token": TOKEN}).json()
+    # 2) publica
+    requests.post(f"https://graph.facebook.com/v21.0/{IG_USER_ID}/media_publish",
+        data={"creation_id": c["id"], "access_token": TOKEN})
+```
+
+Observações:
+- Precisa da permissão `instagram_content_publish` (já tem, pois publica feed).
+- Story conta no limite de 25 publicações/24h (junto com feed). Folgado.
+- Link CLICÁVEL (sticker de link) não entra via API — o CTA fica desenhado na imagem.
+  Se quiser link clicável, publique o story manual e adicione o sticker.
