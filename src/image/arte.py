@@ -141,12 +141,35 @@ def montar(produto_bytes: bytes, textos: dict, fundo_img: Image.Image = None,
     """
     base = _preparar_fundo(fundo_img, seed)
 
-    # produto recortado, centralizado
+    # produto recortado, centralizado, ASSENTADO (sombra de contato + reflexo)
+    from PIL import ImageChops
     rgba = composer.bbox_conteudo(composer.recortar_produto(produto_bytes, usar_ia=usar_ia_recorte))
-    ph = int(H * 0.50); pw = int(rgba.width * ph / rgba.height)
+    # cabe numa CAIXA (altura E largura) -> funciona p/ frasco alto, curto (30ml)
+    # ou kit largo, sem esticar nem estourar
+    max_h = int(H * 0.50); max_w = int(W * 0.66)
+    escala = min(max_h / rgba.height, max_w / rgba.width)
+    ph = max(1, int(rgba.height * escala)); pw = max(1, int(rgba.width * escala))
     prod = rgba.resize((pw, ph))
-    px = W // 2 - pw // 2; py = int(H * 0.80) - ph
-    base.alpha_composite(composer.sombra(prod), (px + 12, py + 18))
+    px = W // 2 - pw // 2; py = int(H * 0.76) - ph
+    chao = py + ph
+
+    # sombra de contato no "chão" (elipse desfocada) — assenta o produto
+    sc = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    ImageDraw.Draw(sc).ellipse([px + pw * 0.10, chao - 28, px + pw * 0.90, chao + 46],
+                               fill=(0, 0, 0, 160))
+    base.alpha_composite(sc.filter(ImageFilter.GaussianBlur(26)))
+
+    # reflexo no chão (espelhado, com fade rápido)
+    h_ref = int(ph * 0.45)
+    refl = prod.transpose(Image.FLIP_TOP_BOTTOM).crop((0, 0, pw, h_ref))
+    fade = Image.new("L", refl.size, 0); fd = ImageDraw.Draw(fade)
+    for yy in range(h_ref):
+        fd.line([(0, yy), (pw, yy)], fill=int(75 * (1 - yy / h_ref)))
+    refl.putalpha(ImageChops.multiply(refl.split()[-1], fade))
+    base.alpha_composite(refl, (px, chao + 2))
+
+    # sombra lateral suave + produto por cima
+    base.alpha_composite(composer.sombra(prod, blur=20, op=95), (px + 8, py + 14))
     base.alpha_composite(prod, (px, py))
 
     # título em placa (centralizado)
