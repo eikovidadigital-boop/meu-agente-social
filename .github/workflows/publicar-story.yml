@@ -1,0 +1,25 @@
+name: Publicar Story
+on:
+  workflow_run:
+    workflows: ["Ciclo Diario"]     # dispara quando o post do feed termina
+    types: [completed]
+  workflow_dispatch:                 # tambem da pra rodar na mao
+
+jobs:
+  publicar-story:
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    env:
+      IG_ACCOUNT_ID: ${{ secrets.IG_ACCOUNT_ID }}
+      PAGE_ACCESS_TOKEN: ${{ secrets.PAGE_ACCESS_TOKEN }}
+      GH_TOKEN: ${{ secrets.GH_TOKEN }}
+      GH_IMAGES_REPO: ${{ secrets.GH_IMAGES_REPO }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Instalar dependencias
+        run: pip install -r requirements.txt
+      - name: Publicar story do produto do dia
+        run: python run_story.py
