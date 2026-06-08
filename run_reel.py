@@ -57,35 +57,38 @@ def _nome(p):
     return "Produto"
 
 
-def hospedar_video(path):
-    """Sobe o MP4 no repo de imagens (GitHub) e devolve a URL publica (raw)."""
+def _subir_github(path, subpasta):
+    """Sobe um arquivo no repo de imagens (GitHub) e devolve a URL publica (raw)."""
     repo = os.environ.get("GH_IMAGES_REPO") or getattr(config, "GH_IMAGES_REPO", "")
     token = os.environ.get("GH_TOKEN") or getattr(config, "GH_TOKEN", "")
-    nome = f"reels/reel_{int(time.time())}.mp4"
+    ext = os.path.splitext(path)[1]
+    nome = f"{subpasta}/{subpasta}_{int(time.time())}{ext}"
     data = base64.b64encode(open(path, "rb").read()).decode()
     r = net.put(
         f"https://api.github.com/repos/{repo}/contents/{nome}",
         headers={"Authorization": f"token {token}", "Accept": "application/vnd.github+json"},
-        json={"message": "reel eikovida", "content": data}, timeout=180).json()
+        json={"message": "eikovida media", "content": data}, timeout=180).json()
     if "content" not in r:
-        raise RuntimeError(f"Hospedagem do video falhou: {r.get('message', r)}")
+        raise RuntimeError(f"Hospedagem falhou: {r.get('message', r)}")
     return r["content"]["download_url"]
 
 
-def _criar_container(video_url, caption, product_tags):
+def _criar_container(video_url, caption, product_tags, cover_url=None):
     params = {"media_type": "REELS", "video_url": video_url, "caption": caption,
               "share_to_feed": "true", "access_token": config.PAGE_ACCESS_TOKEN}
+    if cover_url:
+        params["cover_url"] = cover_url        # capa que aparece no feed (sem isso, fica preta)
     if product_tags:
         params["product_tags"] = json.dumps(product_tags)
     return net.post(f"{API}/{config.IG_ACCOUNT_ID}/media", params=params, timeout=60).json()
 
 
-def publicar_reel(video_url, caption, product_tags=None):
-    cont = _criar_container(video_url, caption, product_tags)
+def publicar_reel(video_url, caption, product_tags=None, cover_url=None):
+    cont = _criar_container(video_url, caption, product_tags, cover_url)
     if "error" in cont and product_tags:
         # se a etiqueta falhar (ex: permissao), publica o reel sem etiqueta
         print("aviso: etiqueta de produto falhou, publicando sem ela:", cont["error"].get("message"))
-        cont = _criar_container(video_url, caption, None)
+        cont = _criar_container(video_url, caption, None, cover_url)
     if "error" in cont:
         raise RuntimeError(f"Container reel: {cont['error'].get('message')}")
     cid = cont["id"]
@@ -134,6 +137,7 @@ def main():
 
     t = gerar_textos(nome, "", foco, None)
     frame = montar_story(frasco, nome, foco, t["tagline3"])
+    frame.save("capa.png")                       # capa do reel (aparece no feed)
     gerar_reel(frame, "reel.mp4", dur=8, fps=30)
 
     from src.image.story_arte import limpar_nome
@@ -143,11 +147,13 @@ def main():
                "#eikovida #oleosnaturais #cosmeticosnaturais #cuidadonatural #belezanatural")
     legenda = garantir(legenda, f"{nm}. 100% puro e natural. Link na bio.\n\n#eikovida #oleosnaturais")
 
-    url = hospedar_video("reel.mp4")
+    cover_url = _subir_github("capa.png", "capas")
+    url = _subir_github("reel.mp4", "reels")
     print("Reel hospedado:", url)
-    tags = tags_para(nome, retailer_ids=ids_shopify(produto))   # casa o item EXATO (30ml/120ml/kit)
+    print("Capa:", cover_url)
+    tags = tags_para(nome, retailer_ids=ids_shopify(produto), com_posicao=False)  # Reel: etiqueta sem x/y
     print("Etiqueta de produto:", "sim" if tags else "nao encontrada")
-    media_id = publicar_reel(url, legenda, product_tags=tags)
+    media_id = publicar_reel(url, legenda, product_tags=tags, cover_url=cover_url)
     historico.registrar("Reel", nm, media_id, ("com etiqueta" if tags else foco))
     print(f"OK -> reel publicado | produto: {nm} | foco: {foco} | id: {media_id}")
 

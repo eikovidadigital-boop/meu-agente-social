@@ -38,9 +38,6 @@ def gerar_reel(frame, saida="reel.mp4", dur=7.0, fps=30, zoom=0.07):
         big = fimg.resize((nw, nh), Image.LANCZOS)
         x = (nw - W) // 2; y = (nh - H) // 2
         crop = big.crop((x, y, x + W, y + H))
-        arr = np.asarray(crop).astype(np.float32)
-        if i < int(0.4 * fps):                   # fade-in ~0.4s
-            arr *= (i / (0.4 * fps))
-        proc.stdin.write(arr.astype(np.uint8).tobytes())
+        proc.stdin.write(np.asarray(crop).astype(np.uint8).tobytes())
     proc.stdin.close(); proc.wait()
     return saida

@@ -98,6 +98,10 @@ def product_id_para(nome, retailer_ids=None):
     return melhor if ms >= 0.5 else None
 
 
-def tags_para(nome, retailer_ids=None, x=0.5, y=0.5):
+def tags_para(nome, retailer_ids=None, x=0.5, y=0.5, com_posicao=True):
+    """Devolve product_tags pronto pra API, ou None se nao casar.
+    com_posicao=True (foto/feed): inclui x/y. com_posicao=False (Reel): so o produto."""
     pid = product_id_para(nome, retailer_ids)
-    return [{"product_id": pid, "x": x, "y": y}] if pid else None
+    if not pid:
+        return None
+    return [{"product_id": pid, "x": x, "y": y}] if com_posicao else [{"product_id": pid}]
