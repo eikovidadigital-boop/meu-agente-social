@@ -12,6 +12,8 @@ from datetime import datetime
 import requests
 
 from src import config
+from src import util_net as net
+from src import historico
 from src.image import composer
 from src.image.story_arte import montar_story
 from src.image.video import gerar_reel
@@ -40,7 +42,7 @@ def _carregar():
         print("aviso: catalogo.carregar falhou:", e)
     out, page = [], 1
     while page <= 10:
-        r = requests.get(f"https://eikovida.com/products.json?limit=250&page={page}", timeout=30)
+        r = net.get(f"https://eikovida.com/products.json?limit=250&page={page}", timeout=30)
         data = r.json().get("products", [])
         if not data:
             break
@@ -61,7 +63,7 @@ def hospedar_video(path):
     token = os.environ.get("GH_TOKEN") or getattr(config, "GH_TOKEN", "")
     nome = f"reels/reel_{int(time.time())}.mp4"
     data = base64.b64encode(open(path, "rb").read()).decode()
-    r = requests.put(
+    r = net.put(
         f"https://api.github.com/repos/{repo}/contents/{nome}",
         headers={"Authorization": f"token {token}", "Accept": "application/vnd.github+json"},
         json={"message": "reel eikovida", "content": data}, timeout=180).json()
@@ -75,7 +77,7 @@ def _criar_container(video_url, caption, product_tags):
               "share_to_feed": "true", "access_token": config.PAGE_ACCESS_TOKEN}
     if product_tags:
         params["product_tags"] = json.dumps(product_tags)
-    return requests.post(f"{API}/{config.IG_ACCOUNT_ID}/media", params=params, timeout=60).json()
+    return net.post(f"{API}/{config.IG_ACCOUNT_ID}/media", params=params, timeout=60).json()
 
 
 def publicar_reel(video_url, caption, product_tags=None):
@@ -90,7 +92,7 @@ def publicar_reel(video_url, caption, product_tags=None):
     # espera o video processar (status FINISHED) - ate ~5 min
     for _ in range(20):
         time.sleep(15)
-        st = requests.get(f"{API}/{cid}", params={"fields": "status_code",
+        st = net.get(f"{API}/{cid}", params={"fields": "status_code",
                           "access_token": config.PAGE_ACCESS_TOKEN}, timeout=30).json()
         code = st.get("status_code")
         print("status:", code)
@@ -98,7 +100,7 @@ def publicar_reel(video_url, caption, product_tags=None):
             break
         if code == "ERROR":
             raise RuntimeError("Processamento do reel falhou (ERROR).")
-    pub = requests.post(f"{API}/{config.IG_ACCOUNT_ID}/media_publish",
+    pub = net.post(f"{API}/{config.IG_ACCOUNT_ID}/media_publish",
                         params={"creation_id": cid, "access_token": config.PAGE_ACCESS_TOKEN},
                         timeout=60).json()
     if "error" in pub:
@@ -126,7 +128,7 @@ def main():
     if foco not in perm:
         foco = perm[0]
 
-    frasco, sc = melhor_recorte(produto, lambda u: requests.get(u, timeout=30).content, composer)
+    frasco, sc = melhor_recorte(produto, lambda u: net.get(u, timeout=30).content, composer)
     if frasco is None:
         raise SystemExit("ERRO: nao consegui recortar nenhuma foto.")
 
@@ -146,6 +148,7 @@ def main():
     tags = tags_para(nome, retailer_ids=ids_shopify(produto))   # casa o item EXATO (30ml/120ml/kit)
     print("Etiqueta de produto:", "sim" if tags else "nao encontrada")
     media_id = publicar_reel(url, legenda, product_tags=tags)
+    historico.registrar("Reel", nm, media_id, ("com etiqueta" if tags else foco))
     print(f"OK -> reel publicado | produto: {nm} | foco: {foco} | id: {media_id}")
 
 

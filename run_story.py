@@ -13,6 +13,8 @@ from datetime import datetime
 import requests
 
 from src import config
+from src import util_net as net
+from src import historico
 from src.image import composer
 from src.image.generator import ImageGenerator
 from src.image.story_arte import montar_story
@@ -39,7 +41,7 @@ def _carregar():
         print("aviso: catalogo.carregar falhou:", e)
     out, page = [], 1
     while page <= 10:
-        r = requests.get(f"https://eikovida.com/products.json?limit=250&page={page}", timeout=30)
+        r = net.get(f"https://eikovida.com/products.json?limit=250&page={page}", timeout=30)
         data = r.json().get("products", [])
         if not data:
             break
@@ -67,13 +69,13 @@ def _url(p):
 
 def publicar_story(image_url):
     """Cria container STORIES (sem caption), aguarda e publica."""
-    cont = requests.post(f"{API}/{config.IG_ACCOUNT_ID}/media",
+    cont = net.post(f"{API}/{config.IG_ACCOUNT_ID}/media",
                          params={"image_url": image_url, "media_type": "STORIES",
                                  "access_token": config.PAGE_ACCESS_TOKEN}, timeout=60).json()
     if "error" in cont:
         raise RuntimeError(f"Container story: {cont['error'].get('message')}")
     time.sleep(8)
-    pub = requests.post(f"{API}/{config.IG_ACCOUNT_ID}/media_publish",
+    pub = net.post(f"{API}/{config.IG_ACCOUNT_ID}/media_publish",
                         params={"creation_id": cont["id"],
                                 "access_token": config.PAGE_ACCESS_TOKEN}, timeout=60).json()
     if "error" in pub:
@@ -102,7 +104,7 @@ def main():
         foco = perm[0]
 
     # escolhe a FOTO MAIS LIMPA do produto (sem splash), igual ao feed
-    frasco, sc = melhor_recorte(produto, lambda u: requests.get(u, timeout=30).content, composer)
+    frasco, sc = melhor_recorte(produto, lambda u: net.get(u, timeout=30).content, composer)
     if frasco is None:
         raise SystemExit("ERRO: nao consegui recortar nenhuma foto.")
     print(f"Foto escolhida (score {sc:.2f} - menor=mais limpo)")
@@ -116,6 +118,7 @@ def main():
     print("Story hospedado:", image_url)
 
     media_id = publicar_story(image_url)
+    historico.registrar("Story", nome, media_id, foco)
     print(f"OK -> story publicado | produto: {nome} | foco: {foco} | id: {media_id}")
 
 
