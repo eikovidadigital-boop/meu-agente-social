@@ -1,9 +1,12 @@
 name: Publicar Story
 on:
   workflow_run:
-    workflows: ["Ciclo Diario"]     # dispara quando o post do feed termina
+    workflows: ["Ciclo Diario"]
     types: [completed]
-  workflow_dispatch:                 # tambem da pra rodar na mao
+  workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   publicar-story:
@@ -23,3 +26,12 @@ jobs:
         run: pip install -r requirements.txt
       - name: Publicar story do produto do dia
         run: python run_story.py
+      - name: Salvar historico
+        run: |
+          if [ -f HISTORICO_POSTS.md ]; then
+            git config user.name "eikovida-bot"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add HISTORICO_POSTS.md
+            git commit -m "log: story do dia" || echo "sem mudanca"
+            git push || (git pull --rebase --autostash && git push) || echo "push falhou"
+          fi
