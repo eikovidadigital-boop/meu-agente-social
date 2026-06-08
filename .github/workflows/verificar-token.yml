@@ -1,0 +1,21 @@
+name: Verificar Token
+on:
+  schedule:
+    - cron: '0 11 * * 1'    # toda segunda, ~8h BRT
+  workflow_dispatch:
+
+jobs:
+  verificar-token:
+    runs-on: ubuntu-latest
+    env:
+      IG_ACCOUNT_ID: ${{ secrets.IG_ACCOUNT_ID }}
+      PAGE_ACCESS_TOKEN: ${{ secrets.PAGE_ACCESS_TOKEN }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - name: Instalar dependencias
+        run: pip install -r requirements.txt
+      - name: Verificar validade do token
+        run: python verificar_token.py
