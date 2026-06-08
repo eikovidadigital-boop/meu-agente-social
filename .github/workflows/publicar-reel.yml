@@ -1,0 +1,36 @@
+name: Publicar Reel
+on:
+  schedule:
+    - cron: '0 20 * * 2,5'    # ~17h BRT, terca e sexta
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  publicar-reel:
+    runs-on: ubuntu-latest
+    env:
+      IG_ACCOUNT_ID: ${{ secrets.IG_ACCOUNT_ID }}
+      PAGE_ACCESS_TOKEN: ${{ secrets.PAGE_ACCESS_TOKEN }}
+      GH_TOKEN: ${{ secrets.GH_TOKEN }}
+      GH_IMAGES_REPO: ${{ secrets.GH_IMAGES_REPO }}
+      CATALOG_ID: ${{ secrets.CATALOG_ID }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - name: Instalar dependencias
+        run: pip install -r requirements.txt && pip install imageio-ffmpeg
+      - name: Gerar e publicar o reel
+        run: python run_reel.py
+      - name: Salvar historico
+        run: |
+          if [ -f HISTORICO_POSTS.md ]; then
+            git config user.name "eikovida-bot"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add HISTORICO_POSTS.md
+            git commit -m "log: reel" || echo "sem mudanca"
+            git push || (git pull --rebase --autostash && git push) || echo "push falhou"
+          fi
