@@ -7,20 +7,23 @@ except ImportError:
     from image.arte_informativo import (VERDE, VERDE_ESC, MARROM, MARROM_ESC, CREME, BRANCO,
                                         mont, anton, quebrar, frasco_demo, FOCO_LABEL)
 import numpy as np, math, re
-from PIL import Image, ImageDraw, ImageFilter
+from PIL import Image, ImageDraw, ImageFilter, ImageEnhance
 
 SW, SH = 1080, 1920
 TOPO_SEG, BASE_SEG = 270, 1680
 
 
 def limpar_nome(nome):
-    """Tira 'Óleo de', volume, marca e termos longos -> nome curto pro titulo."""
+    """Reduz ao INGREDIENTE principal (ex: 'Óleo de Rícino Extra Virgem 120ml' -> 'Rícino').
+    Qualificadores (extra virgem, não refinado, volume) ficam no rótulo da foto, nunca no título."""
     n = nome or ""
-    n = re.sub(r'(?i)^\s*[óo]leo\s+(vegetal\s+)?(de\s+|da\s+|do\s+)?', '', n)
-    n = re.sub(r'(?i)\b\d+\s*ml\b', '', n)
-    n = re.sub(r'(?i)\beiko\s*vida\b|\beiko\b', '', n)
-    n = re.sub(r'(?i)\bn[ãa]o\s+refinad[oa]\b', '', n)
-    n = re.sub(r'(?i)\bprensad[oa]\s+a\s+frio\b', '', n)
+    n = re.sub(r'(?i)^\s*[óo]leo\s+(vegetal\s+)?(de\s+|da\s+|do\s+)?', '', n)   # tira "Óleo de"
+    n = re.sub(r'(?i)\b\d+\s*(ml|g|kg|l)\b', '', n)                              # volume/peso
+    n = re.sub(r'(?i)\beiko\s*vida\b|\beiko\b', '', n)                          # marca
+    quals = (r'(?i)\b(n[ãa]o\s+refinad[oa]|refinad[oa]|extra\s*virgem|virgem|'
+             r'prensad[oa]\s+a\s+frio|puro|pura|100%|premium|org[âa]nic[oa]|'
+             r'natural|concentrad[oa]|artesanal)\b')
+    n = re.sub(quals, '', n)                                                     # qualificadores
     n = re.sub(r'\s{2,}', ' ', n).strip(' -•,')
     return n or (nome or "").strip()
 
@@ -64,18 +67,46 @@ def _halo(cx, cy, r=460):
     return Image.fromarray(arr, "RGBA")
 
 
-def montar_story(produto_rgba, nome, foco, tagline3, cta="ACESSE O LINK NA BIO", selo="PRODUTO DO DIA", seta="cima"):
-    nome = limpar_nome(nome)
-    img = Image.new("RGB", (SW, SH), CREME)
-    noise = (np.random.rand(SH, SW, 1)*8).astype(np.uint8)
-    img = Image.fromarray(np.clip(np.array(img).astype(np.int16)-4+noise, 0, 255).astype(np.uint8), "RGB").convert("RGBA")
+def _gradiente_legibilidade():
+    """Clareia topo (titulo/tagline) e base (CTA); centro fica transparente (mostra o fundo)."""
+    arr = np.zeros((SH, SW, 4), dtype=np.uint8)
+    arr[..., 0] = 245; arr[..., 1] = 240; arr[..., 2] = 225
+    top = np.clip(1 - np.arange(SH) / 640.0, 0, 1) ** 1.4
+    base = np.clip((np.arange(SH) - 1470) / float(SH - 1470), 0, 1) ** 1.4
+    col = np.maximum(top, base)
+    arr[..., 3] = (col * 185).astype(np.uint8)[:, None]
+    return Image.fromarray(arr, "RGBA")
 
-    folhas = Image.new("RGBA", (SW, SH), (0,0,0,0))
-    _ramo(folhas, -30, -30, 38, 430, 5, 1.1, (135,173,37,80))
-    _ramo(folhas, SW+30, -20, 148, 360, 4, 0.95, (104,134,24,70))
-    _ramo(folhas, SW+30, SH+30, 212, 470, 6, 1.15, (135,173,37,80))
-    _ramo(folhas, -30, SH+20, -38, 400, 5, 1.0, (104,134,24,70))
-    img.alpha_composite(folhas.filter(ImageFilter.GaussianBlur(1.5)))
+
+def _preparar_fundo(fundo):
+    """Fundo de IA -> base do story: cover-crop 1080x1920, leve desfoque e veu pra legibilidade."""
+    fr = fundo.convert("RGB")
+    e = max(SW / fr.size[0], SH / fr.size[1])
+    fr = fr.resize((int(fr.size[0] * e) + 1, int(fr.size[1] * e) + 1), Image.LANCZOS)
+    x = (fr.size[0] - SW) // 2; y = (fr.size[1] - SH) // 2
+    fr = fr.crop((x, y, x + SW, y + SH))
+    fr = fr.filter(ImageFilter.GaussianBlur(5))
+    fr = ImageEnhance.Color(fr).enhance(0.92)
+    img = fr.convert("RGBA")
+    img.alpha_composite(Image.new("RGBA", (SW, SH), (245, 240, 225, 92)))  # veu creme suave
+    img.alpha_composite(_gradiente_legibilidade())
+    return img
+
+
+def montar_story(produto_rgba, nome, foco, tagline3, cta="ACESSE O LINK NA BIO", selo="PRODUTO DO DIA", seta="cima", fundo=None):
+    nome = limpar_nome(nome)
+    if fundo is not None:
+        img = _preparar_fundo(fundo)                      # fundo gerado por IA
+    else:
+        img = Image.new("RGB", (SW, SH), CREME)           # fundo desenhado (fallback)
+        noise = (np.random.rand(SH, SW, 1)*8).astype(np.uint8)
+        img = Image.fromarray(np.clip(np.array(img).astype(np.int16)-4+noise, 0, 255).astype(np.uint8), "RGB").convert("RGBA")
+        folhas = Image.new("RGBA", (SW, SH), (0,0,0,0))
+        _ramo(folhas, -30, -30, 38, 430, 5, 1.1, (135,173,37,80))
+        _ramo(folhas, SW+30, -20, 148, 360, 4, 0.95, (104,134,24,70))
+        _ramo(folhas, SW+30, SH+30, 212, 470, 6, 1.15, (135,173,37,80))
+        _ramo(folhas, -30, SH+20, -38, 400, 5, 1.0, (104,134,24,70))
+        img.alpha_composite(folhas.filter(ImageFilter.GaussianBlur(1.5)))
     d = ImageDraw.Draw(img); cx = SW//2
 
     # ---- CABECALHO (fluido, de cima pra baixo) ----

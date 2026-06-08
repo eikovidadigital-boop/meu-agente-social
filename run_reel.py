@@ -15,7 +15,8 @@ from src import config
 from src import util_net as net
 from src import historico
 from src.image import composer
-from src.image.story_arte import montar_story
+from src.image.story_arte import montar_story, limpar_nome
+from src import fundos
 from src.image.video import gerar_reel
 from src.agents.textos_informativo import gerar_textos
 from src.compliance import focos_permitidos, garantir
@@ -136,16 +137,14 @@ def main():
         raise SystemExit("ERRO: nao consegui recortar nenhuma foto.")
 
     t = gerar_textos(nome, "", foco, None)
-    frame = montar_story(frasco, nome, foco, t["tagline3"], cta="TOQUE PARA COMPRAR", seta=None)
+    fundo = fundos.fundo_do_dia(indice, limpar_nome(nome))   # fundo de IA (rotaciona 4 estilos)
+    frame = montar_story(frasco, nome, foco, t["tagline3"], cta="TOQUE PARA COMPRAR", seta=None, fundo=fundo)
     frame.save("capa.png")                       # capa do reel (aparece no feed)
     gerar_reel(frame, "reel.mp4", dur=8, fps=30)
 
-    from src.image.story_arte import limpar_nome
+    from src.legendas import legenda_reel
     nm = limpar_nome(nome)
-    legenda = (f"{nm} — {' • '.join(t['tagline3'])}.\n\n"
-               "100% puro e natural, prensado a frio. Conheça no link da bio.\n\n"
-               "#eikovida #oleosnaturais #cosmeticosnaturais #cuidadonatural #belezanatural")
-    legenda = garantir(legenda, f"{nm}. 100% puro e natural. Link na bio.\n\n#eikovida #oleosnaturais")
+    legenda = legenda_reel(nm, foco, indice=indice)
 
     cover_url = _subir_github("capa.png", "capas")
     url = _subir_github("reel.mp4", "reels")

@@ -17,7 +17,8 @@ from src import util_net as net
 from src import historico
 from src.image import composer
 from src.image.generator import ImageGenerator
-from src.image.story_arte import montar_story
+from src.image.story_arte import montar_story, limpar_nome
+from src import fundos
 from src.agents.textos_informativo import gerar_textos
 from src.compliance import focos_permitidos
 from src.image.foto import melhor_recorte, urls_produto
@@ -109,7 +110,8 @@ def main():
         raise SystemExit("ERRO: nao consegui recortar nenhuma foto.")
     print(f"Foto escolhida (score {sc:.2f} - menor=mais limpo)")
     t = gerar_textos(nome, "", foco, None)
-    story = montar_story(frasco, nome, foco, t["tagline3"])
+    fundo = fundos.fundo_do_dia(indice, limpar_nome(nome))   # fundo de IA (rotaciona 4 estilos)
+    story = montar_story(frasco, nome, foco, t["tagline3"], fundo=fundo)
 
     # hospeda (mesma hospedagem do feed) e publica
     buf = io.BytesIO(); story.save(buf, "PNG")
