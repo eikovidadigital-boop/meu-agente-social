@@ -136,7 +136,7 @@ def main():
         raise SystemExit("ERRO: nao consegui recortar nenhuma foto.")
 
     t = gerar_textos(nome, "", foco, None)
-    frame = montar_story(frasco, nome, foco, t["tagline3"])
+    frame = montar_story(frasco, nome, foco, t["tagline3"], cta="TOQUE PARA COMPRAR", seta=None)
     frame.save("capa.png")                       # capa do reel (aparece no feed)
     gerar_reel(frame, "reel.mp4", dur=8, fps=30)
 

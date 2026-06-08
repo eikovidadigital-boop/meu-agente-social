@@ -64,7 +64,7 @@ def _halo(cx, cy, r=460):
     return Image.fromarray(arr, "RGBA")
 
 
-def montar_story(produto_rgba, nome, foco, tagline3, cta="ACESSE O LINK NA BIO", selo="PRODUTO DO DIA"):
+def montar_story(produto_rgba, nome, foco, tagline3, cta="ACESSE O LINK NA BIO", selo="PRODUTO DO DIA", seta="cima"):
     nome = limpar_nome(nome)
     img = Image.new("RGB", (SW, SH), CREME)
     noise = (np.random.rand(SH, SW, 1)*8).astype(np.uint8)
@@ -126,9 +126,13 @@ def montar_story(produto_rgba, nome, foco, tagline3, cta="ACESSE O LINK NA BIO",
     d.rounded_rectangle([bx, byy, bx+bw, byy+bh], radius=bh//2, fill=MARROM)
     fsz = 32
     while d.textlength(cta, font=mont(fsz,800)) > bw-90 and fsz > 20: fsz -= 1
-    fb = mont(fsz,800); tw = d.textlength(cta, font=fb); ax = cx - tw/2 - 34; ay = byy + bh/2
-    d.polygon([(ax, ay+10),(ax+24, ay+10),(ax+12, ay-12)], fill=CREME)
-    d.text((cx+18, ay), cta, font=fb, fill=CREME, anchor="mm")
+    fb = mont(fsz,800); ay = byy + bh/2
+    if seta == "cima":
+        tw = d.textlength(cta, font=fb); ax = cx - tw/2 - 34
+        d.polygon([(ax, ay+10),(ax+24, ay+10),(ax+12, ay-12)], fill=CREME)
+        d.text((cx+18, ay), cta, font=fb, fill=CREME, anchor="mm")
+    else:
+        d.text((cx, ay), cta, font=fb, fill=CREME, anchor="mm")
     return img.convert("RGB")
 
 
