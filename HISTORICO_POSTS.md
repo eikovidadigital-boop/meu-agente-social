@@ -7,3 +7,4 @@
 | 08/06/2026 11:11 | Reel | Rícino Extra Virgem | 17915824575392152 | com etiqueta |
 | 08/06/2026 11:49 | Reel | Rícino | 18355863679213399 | com etiqueta |
 | 08/06/2026 21:36 | Story | Óleo de Rícino Extra Virgem 120ml Eiko Vida | 18045526616785127 | PELE |
+| 10/06/2026 11:04 | Reel | Coco Spray | 17902546878443102 | com etiqueta |
