@@ -16,7 +16,7 @@ from src import util_net as net
 from src import historico
 from src.image import composer
 from src.image.story_arte import montar_story, limpar_nome
-from src import fundos
+from src import fundos, musica, rotacao
 from src.image.video import gerar_reel
 from src.agents.textos_informativo import gerar_textos
 from src.compliance import focos_permitidos, garantir
@@ -117,17 +117,18 @@ def main():
     if not produtos:
         raise SystemExit("ERRO: nenhum produto encontrado.")
     indice = datetime.now().timetuple().tm_yday
+    indice_prod = rotacao.indice_produto("reel")   # nao repete produto (varia por horario+formato)
     n = len(produtos)
     produto = None
     for passo in range(n):
-        cand = produtos[(indice + passo) % n]
+        cand = produtos[(indice_prod + passo) % n]
         if urls_produto(cand):
             produto = cand; break
     if not produto:
         raise SystemExit("ERRO: nenhum produto com imagem.")
 
     nome = _nome(produto)
-    foco = escolher_foco(indice, n)
+    foco = escolher_foco(indice_prod, n)
     perm = focos_permitidos(nome)
     if foco not in perm:
         foco = perm[0]
@@ -140,7 +141,7 @@ def main():
     fundo = fundos.fundo_do_dia(indice, limpar_nome(nome))   # fundo de IA (rotaciona 4 estilos)
     frame = montar_story(frasco, nome, foco, t["tagline3"], cta="TOQUE PARA COMPRAR", seta=None, fundo=fundo)
     frame.save("capa.png")                       # capa do reel (aparece no feed)
-    gerar_reel(frame, "reel.mp4", dur=8, fps=30)
+    gerar_reel(frame, "reel.mp4", dur=8, fps=30, musica=musica.escolher_musica(indice))
 
     from src.legendas import legenda_reel
     nm = limpar_nome(nome)

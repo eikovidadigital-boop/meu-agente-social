@@ -18,7 +18,7 @@ from src import historico
 from src.image import composer
 from src.image.generator import ImageGenerator
 from src.image.story_arte import montar_story, limpar_nome
-from src import fundos
+from src import fundos, rotacao
 from src.agents.textos_informativo import gerar_textos
 from src.compliance import focos_permitidos
 from src.image.foto import melhor_recorte, urls_produto
@@ -89,17 +89,18 @@ def main():
     if not produtos:
         raise SystemExit("ERRO: nenhum produto encontrado.")
     indice = datetime.now().timetuple().tm_yday
+    indice_prod = rotacao.indice_produto("story")   # nao repete produto (varia por horario+formato)
     n = len(produtos)
     produto = None
     for passo in range(n):
-        cand = produtos[(indice + passo) % n]
+        cand = produtos[(indice_prod + passo) % n]
         if urls_produto(cand):
             produto = cand; break
     if not produto:
         raise SystemExit("ERRO: nenhum produto com imagem.")
 
     nome = _nome(produto)
-    foco = escolher_foco(indice, n)
+    foco = escolher_foco(indice_prod, n)
     perm = focos_permitidos(nome)
     if foco not in perm:
         foco = perm[0]
