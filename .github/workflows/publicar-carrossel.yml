@@ -1,0 +1,37 @@
+name: Publicar Carrossel
+on:
+  schedule:
+    - cron: '0 17 * * 3,6'    # ~14h BRT, quarta e sabado
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  publicar-carrossel:
+    runs-on: ubuntu-latest
+    env:
+      IG_ACCOUNT_ID: ${{ secrets.IG_ACCOUNT_ID }}
+      PAGE_ACCESS_TOKEN: ${{ secrets.PAGE_ACCESS_TOKEN }}
+      GH_TOKEN: ${{ secrets.GH_TOKEN }}
+      GH_IMAGES_REPO: ${{ secrets.GH_IMAGES_REPO }}
+      CATALOG_ID: ${{ secrets.CATALOG_ID }}
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - name: Instalar dependencias
+        run: pip install -r requirements.txt
+      - name: Gerar e publicar o carrossel
+        run: python run_carrossel.py
+      - name: Salvar historico
+        run: |
+          if [ -f HISTORICO_POSTS.md ]; then
+            git config user.name "eikovida-bot"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add HISTORICO_POSTS.md
+            git commit -m "log: carrossel" || echo "sem mudanca"
+            git push || (git pull --rebase --autostash && git push) || echo "push falhou"
+          fi
