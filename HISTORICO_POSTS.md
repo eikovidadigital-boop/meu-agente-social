@@ -11,3 +11,4 @@
 | 10/06/2026 12:01 | Story | Óleo de Coco Extra Virgem Spray 100ml Eiko Vida | 18070026272689035 | PELE |
 | 10/06/2026 21:35 | Story | Óleo de Coco Extra Virgem Spray 100ml Eiko Vida | 18122501392659986 | PELE |
 | 11/06/2026 10:29 | Carrossel (beneficios) | Óleo de Alecrim Extra Virgem 120ml Eiko Vida | 18120947407668510 | BENEFICIOS |
+| 11/06/2026 10:47 | Carrossel (beneficios) | Óleo de Alecrim Extra Virgem 120ml Eiko Vida | 18091333598033363 | BENEFICIOS |
