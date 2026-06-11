@@ -47,11 +47,18 @@ def _arraste(d):
     d.text((W - 205, H - 120), "ARRASTE", font=mont(24, 800), fill=MARROM, anchor="mm")
 
 
-def _frasco(img, frasco, maxh, cy_top):
+def _frasco(img, frasco, y0, y1, maxw=820):
+    """Encaixa o frasco no espaco vertical [y0, y1], centralizado, sem estourar a largura.
+    Garrafas estreitas crescem pela altura; kits largos ficam limitados por maxw."""
     fr = frasco.copy()
-    e = maxh / fr.size[1]
-    fr = fr.resize((max(1, int(fr.size[0] * e)), max(1, int(fr.size[1] * e))), Image.LANCZOS)
-    img.alpha_composite(fr, (W // 2 - fr.size[0] // 2, cy_top))
+    espaco = y1 - y0
+    e = espaco / fr.size[1]
+    if fr.size[0] * e > maxw:
+        e = maxw / fr.size[0]
+    w = max(1, int(fr.size[0] * e)); h = max(1, int(fr.size[1] * e))
+    fr = fr.resize((w, h), Image.LANCZOS)
+    top = y0 + (espaco - h) // 2
+    img.alpha_composite(fr, (W // 2 - w // 2, top))
 
 
 def slide_capa(tipo, nome, frasco):
@@ -69,7 +76,7 @@ def slide_capa(tipo, nome, frasco):
         fn = anton(fn.size - 4)
     d.text((cx, 340), nome_up, font=fn, fill=MARROM_ESC, anchor="mm")
     d.text((cx, 432), cfg["sub"], font=mont(30, 600), fill=MARROM, anchor="mm")
-    _frasco(img, frasco, 600, H - 600 - 110); d = ImageDraw.Draw(img)
+    _frasco(img, frasco, 455, 1235); d = ImageDraw.Draw(img)
     _arraste(d); _rodape(d)
     return img.convert("RGB")
 
@@ -106,7 +113,7 @@ def slide_cta(nome, frasco):
     _marca_topo(d)
     d.text((cx, 180), "GOSTOU?", font=anton(74), fill=MARROM_ESC, anchor="mm")
     d.text((cx, 256), f"Garanta o seu Óleo de {nome}", font=mont(32, 600), fill=MARROM, anchor="mm")
-    _frasco(img, frasco, 540, 300); d = ImageDraw.Draw(img)
+    _frasco(img, frasco, 312, 1125); d = ImageDraw.Draw(img)
     bw = 640; bx = cx - bw / 2; byy = H - 205
     d.rounded_rectangle([bx, byy, bx + bw, byy + 94], radius=47, fill=MARROM)
     d.text((cx, byy + 47), "TOQUE PARA COMPRAR", font=mont(36, 800), fill=CREME, anchor="mm")
