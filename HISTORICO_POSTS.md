@@ -15,3 +15,4 @@
 | 12/06/2026 12:17 | Story | Óleo de Ojon (Batana) 30ml Eiko Vida | 17943291030038659 | PELE |
 | 12/06/2026 21:05 | Story | Kit Brilho Natural Eiko Vida | 17974839255052233 | PELE |
 | 13/06/2026 08:35 | Reel | Rosa Mosqueta | 18004679591929060 | com etiqueta |
+| 13/06/2026 20:59 | Carrossel (modo_usar) | Condicionador Vegano de Coco 300ml Eiko Vida | 17990067389816004 | MODO_USAR |
