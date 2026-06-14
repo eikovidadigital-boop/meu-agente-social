@@ -10,7 +10,7 @@ Faz duas coisas alem de chamar o pipeline:
    (Instagram Shopping). Se nao houver catalogo/permissao, publica sem etiqueta.
 """
 from src.pipeline import executar_diario
-from src import catalogo, rotacao
+from src import produtos as cat, rotacao
 from src.social.instagram import InstagramPublisher
 from src.social_shopping import tags_para, ids_shopify
 
@@ -34,11 +34,11 @@ def _ligar_etiqueta(produto):
 
 
 def main():
-    produtos = catalogo.carregar()
+    lista = cat.carregar()
     escolhido = None
-    if produtos:
+    if lista:
         indice = rotacao.indice_produto("feed")     # varia por dia + horario
-        escolhido = catalogo.escolher(produtos, indice)
+        escolhido = cat.escolher(lista, "feed", indice)   # nao repete o ingrediente (ex: 2x Coco)
 
     if escolhido:
         _ligar_etiqueta(escolhido)

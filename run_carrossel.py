@@ -31,21 +31,8 @@ API = "https://graph.facebook.com/v25.0"
 
 
 def _carregar():
-    try:
-        from src import catalogo
-        p = catalogo.carregar()
-        if p:
-            return p
-    except Exception as e:
-        print("aviso: catalogo.carregar falhou:", e)
-    out, page = [], 1
-    while page <= 10:
-        r = net.get(f"https://eikovida.com/products.json?limit=250&page={page}", timeout=30)
-        data = r.json().get("products", [])
-        if not data:
-            break
-        out += data; page += 1
-    return out
+    from src import produtos
+    return produtos.carregar()
 
 
 def _nome(p):
@@ -117,22 +104,19 @@ def publicar_carrossel(urls, legenda, tags_por_slide=None):
 
 
 def main():
-    produtos = _carregar()
-    if not produtos:
+    from src import produtos as _prod
+    lista = _carregar()
+    if not lista:
         raise SystemExit("ERRO: nenhum produto encontrado.")
 
     indice_prod = rotacao.indice_produto("carrossel")   # nao repete com feed/story/reel
-    n = len(produtos)
-    produto = None
-    for passo in range(n):
-        cand = produtos[(indice_prod + passo) % n]
-        if urls_produto(cand):
-            produto = cand; break
+    produto = _prod.escolher(lista, "carrossel", indice_prod)   # nao repete o ingrediente
     if not produto:
         raise SystemExit("ERRO: nenhum produto com imagem.")
 
     nome = _nome(produto)
     nome_limpo = limpar_nome(nome)
+    descricao = produto.get("descricao", "")            # descricao real -> conteudo fiel
     tipo = rotacao.tipo_carrossel()                      # intercala beneficios/curiosidades/modo
     print(f"Carrossel | tipo: {tipo} | produto: {nome}")
 
@@ -141,7 +125,7 @@ def main():
         raise SystemExit("ERRO: nao consegui recortar nenhuma foto.")
     print(f"Foto escolhida (score {sc:.2f} - menor=mais limpo)")
 
-    itens = gerar_itens(nome_limpo, tipo, _llm())
+    itens = gerar_itens(nome, tipo, _llm(), descricao=descricao)
     slides = montar_carrossel(tipo, nome_limpo, frasco, itens)
     print(f"{len(slides)} slides montados (capa + {len(itens)} + CTA)")
 
@@ -157,7 +141,7 @@ def main():
     tags_por_slide = {0: tags, len(urls) - 1: tags} if tags else None
     print("Etiqueta de produto:", "sim" if tags else "nao encontrada")
 
-    legenda = legenda_carrossel(nome_limpo, tipo)
+    legenda = legenda_carrossel(nome, tipo)
     media_id = publicar_carrossel(urls, legenda, tags_por_slide)
     historico.registrar(f"Carrossel ({tipo})", nome, media_id, tipo.upper())
     print(f"OK -> carrossel publicado | tipo: {tipo} | produto: {nome} | id: {media_id}")
