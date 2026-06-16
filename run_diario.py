@@ -33,21 +33,24 @@ def _ligar_etiqueta(produto):
     print("Etiqueta de produto no feed: sim")
 
 
-def _carregar_feed():
-    """Produtos pro feed. Prioriza o catalogo do projeto (tem TODOS os campos que
-    o pipeline usa, inclusive 'info'); se vier vazio, cai pro products.json."""
-    try:
-        from src import catalogo
-        lista = catalogo.carregar() or []
-        if lista:
-            return lista
-    except Exception as e:
-        print("aviso: catalogo.carregar:", e)
-    return cat.carregar()                           # fallback (products.json, ja com 'info')
+def _blindar_pipeline():
+    """No GitHub Actions o catalogo nativo volta vazio e o melhor_imagem dele nao
+    aceita o formato vindo do products.json. Como o produto JA foi escolhido aqui,
+    fazemos o pipeline: (1) usar exatamente esse produto e (2) baixar a imagem de
+    forma robusta, aceitando qualquer formato de URL (string, dict ou lista)."""
+    from src import catalogo
+    from src.image.foto import urls_produto
+    catalogo.escolher = lambda produtos, indice: (produtos[0] if produtos else None)
+
+    def _melhor_imagem(produto, baixar_fn):
+        urls = urls_produto(produto)
+        return baixar_fn(urls[0]) if urls else None
+    catalogo.melhor_imagem = _melhor_imagem
 
 
 def main():
-    lista = _carregar_feed()
+    _blindar_pipeline()
+    lista = cat.carregar()                          # products.json (confiavel no Actions)
     escolhido = None
     if lista:
         indice = rotacao.indice_produto("feed")     # varia por dia + horario

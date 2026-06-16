@@ -85,16 +85,22 @@ def carregar(baixar_fn=None):
             desc = _limpar_html(p.get("body_html"))
             info = desc[:200].strip() or (p.get("product_type") or "").strip() \
                 or "Óleo vegetal 100% natural da EikoVida"
+            variants = p.get("variants") or []
+            preco = ""
+            if variants and isinstance(variants[0], dict):
+                preco = str(variants[0].get("price") or "")
             produtos.append({
                 "nome": (p.get("title") or "").strip(),
                 "imagem": imgs[0] if imgs else "",
                 "imagens": [{"src": s} for s in imgs],
                 "descricao": desc,
                 "info": info,                  # o pipeline do feed exige este campo
+                "tema": info,                  # alias defensivo (algumas versoes usam 'tema')
+                "preco": preco,
                 "tipo": (p.get("product_type") or "").strip(),
                 "tags": tags or [],
                 "handle": p.get("handle", ""),
-                "variants": p.get("variants") or [],
+                "variants": variants,
             })
         pagina += 1
     return produtos
