@@ -33,8 +33,21 @@ def _ligar_etiqueta(produto):
     print("Etiqueta de produto no feed: sim")
 
 
+def _carregar_feed():
+    """Produtos pro feed. Prioriza o catalogo do projeto (tem TODOS os campos que
+    o pipeline usa, inclusive 'info'); se vier vazio, cai pro products.json."""
+    try:
+        from src import catalogo
+        lista = catalogo.carregar() or []
+        if lista:
+            return lista
+    except Exception as e:
+        print("aviso: catalogo.carregar:", e)
+    return cat.carregar()                           # fallback (products.json, ja com 'info')
+
+
 def main():
-    lista = cat.carregar()
+    lista = _carregar_feed()
     escolhido = None
     if lista:
         indice = rotacao.indice_produto("feed")     # varia por dia + horario

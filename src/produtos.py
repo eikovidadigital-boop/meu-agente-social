@@ -82,11 +82,15 @@ def carregar(baixar_fn=None):
             tags = p.get("tags")
             if isinstance(tags, str):
                 tags = [t.strip() for t in tags.split(",") if t.strip()]
+            desc = _limpar_html(p.get("body_html"))
+            info = desc[:200].strip() or (p.get("product_type") or "").strip() \
+                or "Óleo vegetal 100% natural da EikoVida"
             produtos.append({
                 "nome": (p.get("title") or "").strip(),
                 "imagem": imgs[0] if imgs else "",
                 "imagens": [{"src": s} for s in imgs],
-                "descricao": _limpar_html(p.get("body_html")),
+                "descricao": desc,
+                "info": info,                  # o pipeline do feed exige este campo
                 "tipo": (p.get("product_type") or "").strip(),
                 "tags": tags or [],
                 "handle": p.get("handle", ""),
