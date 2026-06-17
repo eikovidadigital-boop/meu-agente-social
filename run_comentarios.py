@@ -23,6 +23,7 @@ from src.comentarios import (
     resposta_ia,
     estado,
 )
+from src.comentarios.resposta_ia import bloco_contato
 
 # ---- Configurações de segurança ----
 JANELA_HORAS = 48          # não responde comentários mais antigos que isso
@@ -94,6 +95,7 @@ def main():
             tipo = resultado["tipo"]
             resposta = resultado["resposta"]
             link = resultado["produto_link"]
+            anexar = resultado["anexar"]
 
             if tipo == "IGNORAR" or not resposta:
                 estado.marcar(cid)
@@ -101,8 +103,10 @@ def main():
                 continue
 
             mensagem = resposta
-            if link and tipo in ("COMPRA", "DUVIDA_PRODUTO"):
+            if anexar == "LINK" and link:
                 mensagem = f"{resposta}\n\n👉 {link}"
+            elif anexar == "CONTATO":
+                mensagem = f"{resposta}\n\n{bloco_contato()}"
 
             if ig.responder_comentario(cid, mensagem, token):
                 estado.marcar(cid)
