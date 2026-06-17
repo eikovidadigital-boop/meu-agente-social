@@ -122,10 +122,10 @@ def montar(produto_rgba, nome, foco, tagline3, descricao, beneficios3,
     mx = 70
     # badge de foco (deixa o angulo explicito -> nunca mistura)
     badge_foco(d, mx, 104, foco)
-    d.text((mx, 168), "ÓLEO DE", font=mont(28,700), fill=VERDE_ESC)
-    # nome grande
-    fn = anton(90); asc = fn.getbbox("AÇ")[3]
-    y = 202
+    # nome grande: nome completo do produto (ja traz o tipo correto). NUNCA forca "Óleo de",
+    # pra um condicionador/mascara nunca virar "óleo".
+    fn = anton(84); asc = fn.getbbox("AÇ")[3]
+    y = 178
     for ln in quebrar(d, nome.upper(), fn, W-mx*2):
         d.text((mx, y), ln, font=fn, fill=MARROM_ESC); y += asc + 12
     # tagline

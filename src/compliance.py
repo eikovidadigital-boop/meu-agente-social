@@ -49,6 +49,13 @@ TERAPEUTICO = [
     r"\brepelente\b|\brepel(e|ir)\s+(inseto|mosquito|pernilongo)",
     r"\bexpectorante\b|\bdescongestionante\b",
     r"\bimunol[óo]gic|\bsistema\s+imun",
+    r"\bimunidade\b",
+    r"\bdefesas?\s+(naturais|do\s+corpo|do\s+organismo|imunol)",
+    r"\bde\s+dentro\s+para\s+fora\b",
+    r"\benergia\s+e\s+vitalidade\b|\bvitalidade\b",
+    r"\b(o|do|no|seu)\s+organismo\b",
+    r"\b(fortalec|equilibr|restaur)\w*\s+(o\s+|as\s+|seu\s+)?(sistema\s+imun|defesas|organismo|corpo)\b",
+    r"\babsorvid[oa]\s+pel[oa]\s+(corpo|organismo|couro\s+cabeludo)",
 ]
 
 NIVEIS = [("ALTO", ALTO), ("PESSOAL", PESSOAL), ("ARMADILHA", ARMADILHA), ("TERAPEUTICO", TERAPEUTICO)]
@@ -79,6 +86,30 @@ def focos_permitidos(nome: str, focos=("PELE", "CABELO", "SAUDE")):
     if eh_sensivel(nome):
         return [f for f in focos if f != "SAUDE"]
     return list(focos)
+
+# pistas pra decidir o angulo cosmetico do produto
+_CAPILAR = ("cabelo", "capilar", "fios", "couro cabeludo", "mascara capilar",
+            "condicionador", "shampoo", "xampu", "mecha", "cronograma capilar",
+            "anti-frizz", "antifrizz", "pontas")
+_FACIAL = ("pele", "rosto", "facial", "cutis", "face", "manchas", "acne",
+           "poros", "olheiras", "rugas", "skincare", "hidratante corporal", "corpo")
+
+def foco_cosmetico(nome: str, descricao: str = "", extra: str = "") -> str:
+    """Angulo COSMETICO do produto: 'CABELO' ou 'PELE' — NUNCA 'SAUDE'.
+    Decide pela descricao/nome/tags: produto capilar -> CABELO; facial/corporal
+    -> PELE; na duvida -> PELE. Garante que cosmetico fica cosmetico."""
+    txt = _norm(f"{nome} {descricao} {extra}")
+    cap = any(k in txt for k in _CAPILAR)
+    fac = any(k in txt for k in _FACIAL)
+    if cap and not fac:
+        return "CABELO"
+    if fac and not cap:
+        return "PELE"
+    if cap and fac:                         # versatil: vai pelo que aparece primeiro no texto
+        i_cap = min((txt.find(k) for k in _CAPILAR if k in txt), default=10**9)
+        i_fac = min((txt.find(k) for k in _FACIAL if k in txt), default=10**9)
+        return "CABELO" if i_cap <= i_fac else "PELE"
+    return "PELE"                           # padrao cosmetico (nunca SAUDE)
 
 @dataclass
 class Relatorio:
