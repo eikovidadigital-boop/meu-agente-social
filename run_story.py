@@ -7,6 +7,7 @@ Roda sozinho quando o "Ciclo Diario" termina (workflow publicar-story.yml).
 """
 import base64
 import io
+import re
 import time
 from datetime import datetime
 
@@ -20,14 +21,8 @@ from src.image.generator import ImageGenerator
 from src.image.story_arte import montar_story, limpar_nome
 from src import fundos, rotacao
 from src.agents.textos_informativo import gerar_textos
-from src.compliance import focos_permitidos
+from src.compliance import focos_permitidos, foco_cosmetico
 from src.image.foto import melhor_recorte, urls_produto
-
-try:
-    from src.agents.arte_textos import escolher_foco
-except Exception:
-    def escolher_foco(indice, n):
-        return ["PELE", "CABELO", "SAUDE"][(indice // max(n, 1)) % 3]
 
 API = "https://graph.facebook.com/v25.0"
 
@@ -55,6 +50,22 @@ def _nome(p):
         if p.get(k):
             return p[k]
     return "Produto"
+
+
+def _descricao(p):
+    """Descricao real do produto, cobrindo os dois formatos (catalogo e products.json)."""
+    d = p.get("descricao") or p.get("body_html") or p.get("description") or ""
+    d = re.sub(r"<[^>]+>", " ", d)        # tira HTML
+    return re.sub(r"\s+", " ", d).strip()
+
+
+def _tags(p):
+    """Tags + tipo do produto (pistas extras pro foco: 'Shampoo', 'Kit', etc.)."""
+    t = p.get("tags")
+    if isinstance(t, list):
+        t = " ".join(t)
+    tipo = p.get("product_type") or p.get("tipo") or ""
+    return f"{t or ''} {tipo}".strip()
 
 
 def _url(p):
@@ -100,17 +111,21 @@ def main():
         raise SystemExit("ERRO: nenhum produto com imagem.")
 
     nome = _nome(produto)
-    foco = escolher_foco(indice_prod, n)
+    descricao = _descricao(produto)
+    tags = _tags(produto)
+    # FOCO pela DESCRICAO REAL do produto (igual ao feed) — nunca mais sorteio cego.
+    foco = foco_cosmetico(nome, descricao, tags)    # CABELO ou PELE, NUNCA saude
     perm = focos_permitidos(nome)
     if foco not in perm:
         foco = perm[0]
+    print(f"Story | produto: {nome} | foco: {foco}")
 
     # escolhe a FOTO MAIS LIMPA do produto (sem splash), igual ao feed
     frasco, sc = melhor_recorte(produto, lambda u: net.get(u, timeout=30).content, composer)
     if frasco is None:
         raise SystemExit("ERRO: nao consegui recortar nenhuma foto.")
     print(f"Foto escolhida (score {sc:.2f} - menor=mais limpo)")
-    t = gerar_textos(nome, "", foco, None)
+    t = gerar_textos(nome, descricao[:600], foco, None)   # estuda a descricao real
     fundo = fundos.fundo_do_dia(indice, limpar_nome(nome))   # fundo de IA (rotaciona 4 estilos)
     story = montar_story(frasco, nome, foco, t["tagline3"], fundo=fundo)
 
