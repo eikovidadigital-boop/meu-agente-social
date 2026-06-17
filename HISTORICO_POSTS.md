@@ -18,3 +18,4 @@
 | 13/06/2026 20:59 | Carrossel (modo_usar) | Condicionador Vegano de Coco 300ml Eiko Vida | 17990067389816004 | MODO_USAR |
 | 16/06/2026 20:39 | Story | Óleo de Sucupira Extra Virgem — Cosmético | Eiko Vida | 18190816597379611 | PELE |
 | 17/06/2026 07:09 | Story | Kit Medicina Ayurvédica Eiko Vida - Óleo de Coco + Alecrim | 18072152522694282 | PELE |
+| 17/06/2026 07:38 | Story | Kit Medicina Ayurvédica Eiko Vida - Óleo de Coco + Alecrim | 17868749187652783 | PELE |
