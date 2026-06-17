@@ -133,13 +133,13 @@ def montar(produto_rgba, nome, foco, tagline3, descricao, beneficios3,
     d.text((mx, y), "  •  ".join(t.upper() for t in tagline3), font=mont(27,700), fill=VERDE); y += 54
     # descricao curta
     fdesc = mont(26,500)
-    for ln in quebrar(d, descricao, fdesc, W-mx*2-360):
+    for ln in quebrar(d, descricao, fdesc, W-mx*2-470):
         d.text((mx, y), ln, font=fdesc, fill=(80,66,60)); y += 36
 
     # FRASCO (direita) -- "cabe numa caixa": limita altura E largura
     pr = produto_rgba.copy()
     cox, coy = pr.size
-    max_h, max_w = 630, 360
+    max_h, max_w = 770, 440          # frasco maior (ocupa mais o post)
     esc = min(max_w/cox, max_h/coy)
     pr = pr.resize((max(1,int(cox*esc)), max(1,int(coy*esc))), Image.LANCZOS)
     pw, ph = pr.size

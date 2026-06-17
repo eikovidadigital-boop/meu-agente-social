@@ -115,7 +115,12 @@ def montar_story(produto_rgba, nome, foco, tagline3, cta="ACESSE O LINK NA BIO",
     d.rounded_rectangle([cx-sw_//2, y, cx+sw_//2, y+62], radius=31, fill=VERDE)
     d.text((cx, y+31), selo, font=sf, fill=BRANCO, anchor="mm"); y += 92
 
-    d.text((cx, y), "ÓLEO DE", font=mont(30,700), fill=VERDE_ESC, anchor="ma"); y += 46
+    # "ÓLEO DE" so aparece em oleo simples — kit/mascara/condicionador/etc nao levam
+    _chk = nome.lower()
+    if not any(k in _chk for k in ("kit", "máscara", "mascara", "condicionador",
+                                    "shampoo", "xampu", "creme", "sabonete", "combo",
+                                    "+", "óleo", "oleo")):
+        d.text((cx, y), "ÓLEO DE", font=mont(30,700), fill=VERDE_ESC, anchor="ma"); y += 46
 
     # titulo: fonte se ajusta para caber em no maximo 2 linhas
     size = 104
