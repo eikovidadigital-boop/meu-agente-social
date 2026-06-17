@@ -1,8 +1,13 @@
 # -*- coding: utf-8 -*-
 """
-Gera a resposta do comentário usando a IA (Anthropic), classificando
-o tipo de comentário e escolhendo o produto certo do catálogo.
-A resposta sai SEM link; o link é colado depois (controle de formato).
+Gera a resposta do comentário usando a IA (Anthropic).
+Regras de negócio da EikoVida:
+- Dúvida de produto: responde APENAS com o que está escrito na descrição da loja.
+  Se a info não estiver lá, NÃO inventa -> encaminha contato.
+- Posologia / como aplicar / pode tomar: NÃO orienta -> manda consultar o médico
+  (trabalhamos só com óleos vegetais, não remédios).
+- Catálogo / outras infos: encaminha e-mail e WhatsApp.
+A resposta sai SEM link/contato; o "anexo" é colado depois pelo run (controle de formato).
 """
 import json
 import os
@@ -12,40 +17,61 @@ from . import compliance_resposta
 
 MODELO = "claude-sonnet-4-6"
 
+# ---- Contatos oficiais de atendimento ----
+CONTATO_EMAIL = "suporte@eikovida.com"
+CONTATO_WHATSAPP = "(81) 4141-0577"
+CONTATO_WHATSAPP_LINK = "https://wa.me/558141410577"
+
+
+def bloco_contato() -> str:
+    return f"📧 {CONTATO_EMAIL}\n📱 WhatsApp: {CONTATO_WHATSAPP}"
+
+
 PROMPT_SISTEMA = """Você é o atendente da EikoVida no Instagram — marca brasileira de óleos vegetais naturais e veganos.
 Você responde comentários de seguidores de forma SIMPÁTICA, HUMANA, CALOROSA e BREVE (1 a 2 frases), em português do Brasil. Pode usar 1 emoji no máximo.
 
-REGRAS DE COMPLIANCE (ANVISA) — OBRIGATÓRIAS:
-- Os produtos são COSMÉTICOS de uso EXTERNO. Fale só de PELE e CABELO (hidratação, brilho, maciez, nutrição dos fios, viço da pele).
-- NUNCA prometa cura, tratamento ou qualquer benefício de saúde.
-- NUNCA cite: imunidade, vitalidade, defesas do corpo, inflamação, anti-inflamatório, organismo, "de dentro para fora", emagrecimento, doença, ingestão/uso interno.
-- Se perguntarem sobre ingerir/tomar/uso interno ou saúde, responda com gentileza que são cosméticos de uso externo, para pele e cabelo.
+REGRAS OBRIGATÓRIAS:
+
+1) SÓ O QUE ESTÁ ESCRITO NA LOJA
+- Sobre produtos, responda APENAS com a informação que está na descrição do produto fornecida abaixo.
+- NUNCA invente, suponha ou complete com conhecimento próprio.
+- Se a informação pedida NÃO estiver na descrição, NÃO invente: use o tipo "CONTATO" e oriente a pessoa a falar com o atendimento.
+
+2) NADA DE POSOLOGIA / USO (livra a marca de responsabilidade)
+- Se perguntarem dosagem, quantidade, frequência, "como uso", "como passo na pele", "quantas gotas", "pode tomar/ingerir", "como aplico" → use o tipo "POSOLOGIA".
+- Nesse caso, responda com gentileza que vocês trabalham apenas com óleos vegetais (não são remédios) e que, para orientação de uso, o ideal é a pessoa conversar com o médico dela. NUNCA oriente uso/dose.
+
+3) COMPLIANCE (ANVISA)
+- Os produtos são COSMÉTICOS de uso externo. Fale só de PELE e CABELO.
+- NUNCA prometa cura, tratamento ou benefício de saúde. NUNCA cite imunidade, vitalidade, inflamação, anti-inflamatório, organismo, "de dentro para fora", emagrecimento, doença.
 
 CLASSIFIQUE o comentário em um destes tipos:
-- "ELOGIO": agradece com carinho, sem forçar venda.
-- "DUVIDA_PRODUTO": dúvida sobre o produto ou como usar → responde com base na descrição real.
-- "COMPRA": pergunta de preço, onde comprar, "quero", "como faço pra adquirir" → responde simpático (o link é adicionado automaticamente depois).
-- "RECLAMACAO": problema com pedido/entrega/produto → responde acolhedor e pede pra chamar no Direct. Sem promessas.
-- "IGNORAR": spam, ofensa, marcação de amigo, comentário sem sentido → não responde.
+- "ELOGIO": agradece com carinho, sem forçar venda. (anexar: NADA)
+- "DUVIDA_PRODUTO": dúvida respondível com a descrição da loja. (anexar: LINK)
+- "COMPRA": pergunta de preço, onde comprar, "quero". (anexar: LINK)
+- "POSOLOGIA": pergunta de dose/uso/aplicação/ingestão → mandar consultar o médico. (anexar: NADA)
+- "CONTATO": pergunta sobre catálogo, outras infos, ou algo que NÃO está na descrição da loja. (anexar: CONTATO)
+- "RECLAMACAO": problema com pedido/entrega → acolhe e pede pra falar com o atendimento. (anexar: CONTATO)
+- "IGNORAR": spam, ofensa, marcação de amigo, sem sentido → não responde. (anexar: NADA)
 
-Escolha o produto mais relevante do catálogo (pela legenda do post e pela pergunta). Se não der pra saber, deixe produto vazio.
+Escolha o produto mais relevante do catálogo (pela legenda do post e pela pergunta). Se não houver produto claro, deixe produto_link vazio.
 
-Responda APENAS com um JSON válido, sem texto antes ou depois, neste formato:
-{"tipo": "...", "produto_link": "", "resposta": "..."}
+Responda APENAS com um JSON válido, sem texto antes ou depois:
+{"tipo": "...", "produto_link": "", "anexar": "LINK|CONTATO|NADA", "resposta": "..."}
 
-- "produto_link": copie o link exato do produto do catálogo SE o tipo for COMPRA ou DUVIDA_PRODUTO e houver produto claro; senão deixe "".
-- "resposta": o texto que será publicado (sem link, sem assinatura). Para IGNORAR, deixe "".
+- "produto_link": copie o link EXATO do produto do catálogo só quando fizer sentido (COMPRA/DUVIDA_PRODUTO); senão "".
+- "resposta": o texto publicado (sem link, sem e-mail, sem telefone, sem assinatura). Para IGNORAR, deixe "".
 """
 
 
 def gerar(comentario_texto, legenda_post, contexto_catalogo, max_tentativas=2):
     """
-    Retorna dict: {tipo, resposta, produto_link} já validado por compliance.
+    Retorna dict: {tipo, resposta, produto_link, anexar} já validado por compliance.
     Se não passar no compliance ou for IGNORAR, resposta vem vazia.
     """
     client = Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
 
-    user = f"""CATÁLOGO (produtos disponíveis):
+    user = f"""CATÁLOGO (produtos e descrições da loja — use SÓ o que está aqui):
 {contexto_catalogo}
 
 LEGENDA DO POST onde veio o comentário:
@@ -74,16 +100,20 @@ Classifique e gere a resposta no formato JSON pedido."""
         tipo = dados.get("tipo", "IGNORAR")
         resposta = (dados.get("resposta") or "").strip()
         link = (dados.get("produto_link") or "").strip()
+        anexar = (dados.get("anexar") or "NADA").strip().upper()
+        if anexar not in ("LINK", "CONTATO", "NADA"):
+            anexar = "NADA"
 
         if tipo == "IGNORAR" or not resposta:
-            return {"tipo": "IGNORAR", "resposta": "", "produto_link": ""}
+            return {"tipo": "IGNORAR", "resposta": "", "produto_link": "", "anexar": "NADA"}
 
         ok, motivo = compliance_resposta.validar(resposta)
         if not ok:
             print(f"[compliance] resposta bloqueada ({motivo}). Regenerando...")
             continue
 
-        return {"tipo": tipo, "resposta": resposta, "produto_link": link}
+        return {"tipo": tipo, "resposta": resposta, "produto_link": link, "anexar": anexar}
 
-    # se nada passou, não responde (seguro)
-    return {"tipo": "IGNORAR", "resposta": "", "produto_link": ""}
+    # se nada passou, encaminha pro atendimento humano (seguro)
+    return {"tipo": "CONTATO", "resposta": "Oi! Pra te ajudar certinho, fala com a gente 💚",
+            "produto_link": "", "anexar": "CONTATO"}

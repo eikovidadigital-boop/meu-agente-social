@@ -45,7 +45,7 @@ def carregar_produtos(limite_paginas: int = 10):
             produtos.append({
                 "titulo": p.get("title", "").strip(),
                 "link": f"{LOJA}/products/{handle}",
-                "descricao": _limpar_html(p.get("body_html", ""))[:400],
+                "descricao": _limpar_html(p.get("body_html", ""))[:700],
                 "preco": preco,
             })
         pagina += 1
