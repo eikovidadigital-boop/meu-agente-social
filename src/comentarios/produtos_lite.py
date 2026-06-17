@@ -61,3 +61,12 @@ def montar_contexto(produtos) -> str:
         preco = f" | R${p['preco']}" if p.get("preco") else ""
         linhas.append(f"- {p['titulo']}{preco}\n  link: {p['link']}\n  descrição: {p['descricao']}")
     return "\n".join(linhas)
+
+
+def site_no_ar() -> bool:
+    """Checa em tempo real se a loja está no ar (responde sem erro)."""
+    try:
+        r = httpx.get(LOJA, timeout=15, follow_redirects=True)
+        return r.status_code < 400
+    except Exception:
+        return False

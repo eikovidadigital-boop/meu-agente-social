@@ -8,7 +8,8 @@ Roda pelo GitHub Actions a cada 15 min:
 3. Ignora: já respondidos, da própria conta, e mais antigos que JANELA_HORAS.
 4. Gera resposta com IA (simpática + compliance) e escolhe o produto.
 5. Responde o comentário; em dúvida de compra, cola o link direto do produto.
-6. Marca como respondido (estado commitado pelo workflow).
+6. Comentário sobre site fora do ar: checa o site na hora e responde conforme a realidade.
+7. Marca como respondido (estado commitado pelo workflow).
 """
 import os
 import sys
@@ -36,7 +37,6 @@ def _recente(timestamp_iso: str) -> bool:
     if not timestamp_iso:
         return True
     try:
-        # formato da Graph API: 2026-06-17T12:34:56+0000
         ts = datetime.strptime(timestamp_iso, "%Y-%m-%dT%H:%M:%S%z")
     except Exception:
         return True
@@ -85,7 +85,7 @@ def main():
             if autor and eu and autor == eu:      # não responde a si mesmo
                 continue
             if not _recente(c.get("timestamp")):   # comentário antigo, ignora
-                estado.marcar(cid)                 # marca pra não reavaliar sempre
+                estado.marcar(cid)
                 continue
             if not texto.strip():
                 estado.marcar(cid)
@@ -96,6 +96,22 @@ def main():
             resposta = resultado["resposta"]
             link = resultado["produto_link"]
             anexar = resultado["anexar"]
+
+            # Comentário sobre o site fora do ar: checa na hora e responde conforme a realidade
+            if tipo == "SITE_STATUS":
+                if produtos_lite.site_no_ar():
+                    mensagem = (f"Oi! Já estamos de volta no ar 💚 "
+                                f"Pode acessar a loja normalmente: {produtos_lite.LOJA}")
+                else:
+                    mensagem = ("Oi! Estamos em uma rápida manutenção, já já voltamos 💚 "
+                                "Obrigado pela paciência!")
+                if ig.responder_comentario(cid, mensagem, token):
+                    estado.marcar(cid)
+                    enviadas += 1
+                    print(f"  ✓ @{autor} [SITE_STATUS] respondido.")
+                else:
+                    print(f"  ✗ @{autor}: falha ao publicar resposta.")
+                continue
 
             if tipo == "IGNORAR" or not resposta:
                 estado.marcar(cid)

@@ -50,8 +50,13 @@ CLASSIFIQUE o comentário em um destes tipos:
 - "DUVIDA_PRODUTO": dúvida respondível com a descrição da loja. (anexar: LINK)
 - "COMPRA": pergunta de preço, onde comprar, "quero". (anexar: LINK)
 - "POSOLOGIA": pergunta de dose/uso/aplicação/ingestão → mandar consultar o médico. (anexar: NADA)
+- "SITE": comentário dizendo que o site está fora do ar, não abre, não carrega, caiu, link não funciona, ou está em manutenção.
+    * Veja o "STATUS DO SITE AGORA" informado abaixo.
+    * Se o status for "no ar": responda de forma simpática que vocês já estão de volta e a pessoa pode acessar normalmente. (anexar: LINK, e produto_link = "https://eikovida.com")
+    * Se o status for "fora do ar": responda que estão em manutenção e voltam em breve, pedindo um pouquinho de paciência. (anexar: NADA)
 - "CONTATO": pergunta sobre catálogo, outras infos, ou algo que NÃO está na descrição da loja. (anexar: CONTATO)
 - "RECLAMACAO": problema com pedido/entrega → acolhe e pede pra falar com o atendimento. (anexar: CONTATO)
+- "SITE_STATUS": a pessoa pergunta ou reclama que o SITE está fora do ar, não abre, não carrega, "caiu", "link quebrado", "não consigo acessar". (anexar: NADA — o sistema cuida da resposta automaticamente)
 - "IGNORAR": spam, ofensa, marcação de amigo, sem sentido → não responde. (anexar: NADA)
 
 Escolha o produto mais relevante do catálogo (pela legenda do post e pela pergunta). Se não houver produto claro, deixe produto_link vazio.
@@ -103,6 +108,10 @@ Classifique e gere a resposta no formato JSON pedido."""
         anexar = (dados.get("anexar") or "NADA").strip().upper()
         if anexar not in ("LINK", "CONTATO", "NADA"):
             anexar = "NADA"
+
+        # o sistema monta a resposta do site na hora (checagem real); IA só classifica
+        if tipo == "SITE_STATUS":
+            return {"tipo": "SITE_STATUS", "resposta": "", "produto_link": "", "anexar": "NADA"}
 
         if tipo == "IGNORAR" or not resposta:
             return {"tipo": "IGNORAR", "resposta": "", "produto_link": "", "anexar": "NADA"}
