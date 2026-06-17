@@ -19,3 +19,4 @@
 | 16/06/2026 20:39 | Story | Óleo de Sucupira Extra Virgem — Cosmético | Eiko Vida | 18190816597379611 | PELE |
 | 17/06/2026 07:09 | Story | Kit Medicina Ayurvédica Eiko Vida - Óleo de Coco + Alecrim | 18072152522694282 | PELE |
 | 17/06/2026 07:38 | Story | Kit Medicina Ayurvédica Eiko Vida - Óleo de Coco + Alecrim | 17868749187652783 | PELE |
+| 17/06/2026 12:33 | Reel | Kit Revitalização da Pele - Óleo de Gergelim + Girassol + Semente de uva | 18082076804541838 | com etiqueta |
