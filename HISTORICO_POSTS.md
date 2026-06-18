@@ -24,3 +24,4 @@
 | 17/06/2026 21:01 | Story | Kit Capilar Eiko Vida - Óleo de Rícino + Óleo de Gergelim | 17914834263199469 | CABELO |
 | 17/06/2026 22:55 | Carrossel (beneficios) | Kit Avivação Eiko Vida - Óleo de Abacate + Óleo de Açafrão | 18087370148373552 | BENEFICIOS |
 | 17/06/2026 23:44 | Story | Kit Renovação da Pele Eiko Vida - Mosqueta + Rícino + Óleo de Limão | 18103895164846175 | PELE |
+| 18/06/2026 00:06 | Story | Kit Purificação Eiko Vida - Óleo de Andiroba + Óleo de Limão | 17993482304989509 | PELE |
