@@ -30,6 +30,7 @@ from src.agents.textos_informativo import gerar_textos
 from src.compliance import foco_cosmetico, garantir, suavizar
 from src.carrossel_conteudo import _exibicao
 from src.social_shopping import tags_para, ids_shopify
+from src.facebook.publicador import publicar_no_facebook
 
 API = "https://graph.facebook.com/v25.0"
 
@@ -141,6 +142,14 @@ def main():
     media_id = publicar_feed(image_url, legenda, tags)
     historico.registrar("Feed", nome, media_id, foco)
     print(f"OK -> feed publicado | produto: {nome} | foco: {foco} | id: {media_id}")
+
+    # Espelha no Facebook. O Instagram e prioridade: se o FB falhar, o post do
+    # Instagram ja esta publicado e o sistema apenas registra um aviso.
+    try:
+        fb_id = publicar_no_facebook(image_url, legenda, token=config.PAGE_ACCESS_TOKEN)
+        print(f"OK -> espelhado no Facebook | id: {fb_id}")
+    except Exception as e:
+        print(f"aviso: falhou espelhar no Facebook (Instagram ja publicou): {e}")
 
 
 if __name__ == "__main__":

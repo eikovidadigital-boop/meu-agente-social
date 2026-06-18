@@ -26,6 +26,7 @@ from src.image.carrossel_arte import montar_carrossel
 from src.image.foto import melhor_recorte, urls_produto
 from src.carrossel_conteudo import gerar_itens, legenda_carrossel
 from src.social_shopping import tags_para, ids_shopify
+from src.facebook.publicador import publicar_no_facebook
 
 API = "https://graph.facebook.com/v25.0"
 
@@ -145,6 +146,14 @@ def main():
     media_id = publicar_carrossel(urls, legenda, tags_por_slide)
     historico.registrar(f"Carrossel ({tipo})", nome, media_id, tipo.upper())
     print(f"OK -> carrossel publicado | tipo: {tipo} | produto: {nome} | id: {media_id}")
+
+    # Espelha o carrossel no Facebook. O Instagram e prioridade: se o FB falhar,
+    # o carrossel do Instagram ja esta publicado e o sistema apenas registra um aviso.
+    try:
+        fb_id = publicar_no_facebook(urls, legenda, token=config.PAGE_ACCESS_TOKEN)
+        print(f"OK -> carrossel espelhado no Facebook | id: {fb_id}")
+    except Exception as e:
+        print(f"aviso: falhou espelhar carrossel no Facebook (Instagram ja publicou): {e}")
 
 
 if __name__ == "__main__":

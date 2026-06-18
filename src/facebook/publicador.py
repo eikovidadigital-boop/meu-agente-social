@@ -7,30 +7,32 @@ MESMO PAGE_ACCESS_TOKEN do Instagram (agora com a permissao pages_manage_posts).
 
 Nao precisa de secret novo. O ID da Pagina e descoberto sozinho pelo token.
 
-Uso simples (pra integracao depois):
+Uso:
     from src.facebook.publicador import publicar_no_facebook
 
     # foto unica:
-    publicar_no_facebook("https://.../imagem.jpg", "Minha legenda")
+    publicar_no_facebook("https://.../imagem.jpg", "Minha legenda", token=config.PAGE_ACCESS_TOKEN)
 
     # carrossel (varias fotos no mesmo post):
-    publicar_no_facebook(["https://.../1.jpg", "https://.../2.jpg"], "Minha legenda")
+    publicar_no_facebook(["https://.../1.jpg", "https://.../2.jpg"], "Legenda", token=config.PAGE_ACCESS_TOKEN)
+
+    # se token nao for passado, ele le do ambiente (os.environ["PAGE_ACCESS_TOKEN"]).
 """
 
 import os
 import json
 import httpx
 
-# Versao da Graph API. Se o resto do sistema usar outra versao, pode alinhar aqui.
-GRAPH = "https://graph.facebook.com/v22.0"
+# Mesma versao usada no resto do sistema (run_diario / run_carrossel).
+GRAPH = "https://graph.facebook.com/v25.0"
 
 TIMEOUT = 60.0
 
 
-def _token():
-    tok = os.environ.get("PAGE_ACCESS_TOKEN", "").strip()
+def _token(token=None):
+    tok = (token or "").strip() or os.environ.get("PAGE_ACCESS_TOKEN", "").strip()
     if not tok:
-        raise RuntimeError("PAGE_ACCESS_TOKEN nao encontrado nos secrets.")
+        raise RuntimeError("PAGE_ACCESS_TOKEN nao encontrado (nem passado, nem no ambiente).")
     return tok
 
 
@@ -86,12 +88,13 @@ def _publicar_carrossel(page_id, token, urls_imagens, legenda):
     return dados["id"]
 
 
-def publicar_no_facebook(imagens, legenda):
+def publicar_no_facebook(imagens, legenda, token=None):
     """
     imagens : 1 URL (str) = foto unica  |  lista de URLs = carrossel.
               As URLs precisam ser publicas (raw.githubusercontent.com,
               cdn.shopify.com, etc.) - o Facebook baixa a imagem da URL.
     legenda : texto do post (a mesma legenda usada no Instagram).
+    token   : token da Pagina. Se None, le de os.environ["PAGE_ACCESS_TOKEN"].
 
     Retorna o ID do post publicado. Levanta erro se algo falhar.
     """
@@ -101,13 +104,13 @@ def publicar_no_facebook(imagens, legenda):
     if not imagens:
         raise RuntimeError("Nenhuma imagem informada para publicar no Facebook.")
 
-    token = _token()
-    page_id = _page_id(token)
+    tok = _token(token)
+    page_id = _page_id(tok)
 
     if len(imagens) == 1:
-        post_id = _publicar_foto_unica(page_id, token, imagens[0], legenda)
+        post_id = _publicar_foto_unica(page_id, tok, imagens[0], legenda)
     else:
-        post_id = _publicar_carrossel(page_id, token, imagens, legenda)
+        post_id = _publicar_carrossel(page_id, tok, imagens, legenda)
 
     print(f"[facebook] Publicado com sucesso. Post: {post_id}")
     return post_id
