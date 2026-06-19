@@ -27,3 +27,4 @@
 | 18/06/2026 00:06 | Story | Kit Purificação Eiko Vida - Óleo de Andiroba + Óleo de Limão | 17993482304989509 | PELE |
 | 18/06/2026 00:39 | Story | Kit Purificação Eiko Vida - Óleo de Andiroba + Óleo de Limão | 17893223190512944 | PELE |
 | 19/06/2026 12:42 | Story | Óleo de Abacate Extra Virgem 30ml Eiko Vida | 18105936964818399 | PELE |
+| 19/06/2026 19:31 | Story | Terapia Capilar das Estrelas - Óleo de Alecrim + Óleo de Rícino + Óleo de Coco | 18077177393288168 | CABELO |
