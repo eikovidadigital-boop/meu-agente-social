@@ -12,6 +12,7 @@ import time
 import requests
 
 from src import config
+from src import util_net as net
 
 OPENAI_EDITS = "https://api.openai.com/v1/images/edits"
 OPENAI_GENERATIONS = "https://api.openai.com/v1/images/generations"
@@ -63,7 +64,7 @@ class ImageGenerator:
 
         nome = f"img_{int(time.time())}.jpg"
         api = f"https://api.github.com/repos/{config.GH_IMAGES_REPO}/contents/{nome}"
-        resp = requests.put(
+        resp = net.put(
             api,
             headers={
                 "Authorization": f"token {config.GH_TOKEN}",

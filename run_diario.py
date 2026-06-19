@@ -20,7 +20,7 @@ import requests
 
 from src import config
 from src import util_net as net
-from src import historico, rotacao
+from src import historico, rotacao, tempo
 from src import produtos as cat
 from src.image import composer
 from src.image.generator import ImageGenerator
@@ -81,6 +81,36 @@ def _legenda_feed(nome_exib, beneficios3, descricao):
     return garantir(corpo, fallback) + "\n\n" + tag
 
 
+def _modo_do_dia():
+    """Terca e quinta = post de CONVERSAO (vende direto); demais dias = educativo.
+    Bate com os horarios do diario.yml (Ter/Qui ~19h BRT marcado 'conversao')."""
+    return "conversao" if tempo.agora().weekday() in (1, 3) else "educativo"
+
+
+def _legenda_conversao(nome_exib, beneficios3, descricao, preco=""):
+    """Legenda focada em VENDA: gatilho de oferta, frete pra todo Brasil e CTA
+    forte de compra. Continua 100% dentro da trava de compliance (sem claim de saude)."""
+    desc = suavizar(descricao or "")[:130].strip()
+    linhas = "\n".join(f"✓ {b}" for b in (beneficios3 or [])[:3])
+    preco_txt = ""
+    try:
+        if preco and float(str(preco).replace(",", ".")) > 0:
+            preco_txt = f"\n\n💰 A partir de R$ {str(preco).replace('.', ',')}"
+    except Exception:
+        preco_txt = ""
+    corpo = f"✨ {nome_exib} ✨\n\n"
+    if desc:
+        corpo += desc + "\n\n"
+    if linhas:
+        corpo += linhas + "\n\n"
+    corpo += "🌿 100% natural • prensado a frio" + preco_txt
+    corpo += "\n\n🚚 Enviamos para todo o Brasil"
+    corpo += "\n🛒 Garanta o seu agora pelo link na bio — toque em comprar!"
+    fallback = f"✨ {nome_exib} ✨ Garanta o seu pelo link na bio. Enviamos para todo o Brasil! 🚚"
+    tag = "#eikovida #oleosnaturais #belezanatural #cuidadonatural #ofertaeikovida #fretepratodobrasil"
+    return garantir(corpo, fallback) + "\n\n" + tag
+
+
 def publicar_feed(image_url, caption, product_tags=None):
     """Publica UMA foto no feed (com etiqueta de compra). Se a etiqueta falhar,
     publica sem ela (nao perde o post)."""
@@ -135,7 +165,12 @@ def main():
     image_url = ImageGenerator().hospedar(base64.b64encode(buf.getvalue()).decode())
     print("Arte hospedada:", image_url)
 
-    legenda = _legenda_feed(nome_exib, t.get("beneficios3", []), descricao)
+    modo = _modo_do_dia()
+    if modo == "conversao":
+        legenda = _legenda_conversao(nome_exib, t.get("beneficios3", []), descricao, produto.get("preco", ""))
+    else:
+        legenda = _legenda_feed(nome_exib, t.get("beneficios3", []), descricao)
+    print(f"Modo do dia: {modo}")
     tags = tags_para(nome, retailer_ids=ids_shopify(produto), com_posicao=True)
     print("Etiqueta de produto:", "sim" if tags else "nao encontrada")
 

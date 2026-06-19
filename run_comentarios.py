@@ -25,6 +25,7 @@ from src.comentarios import (
     estado,
 )
 from src.comentarios.resposta_ia import bloco_contato
+from src import utm
 
 # ---- Configurações de segurança ----
 JANELA_HORAS = 48          # não responde comentários mais antigos que isso
@@ -120,6 +121,7 @@ def main():
 
             mensagem = resposta
             if anexar == "LINK" and link:
+                link = utm.aplicar(link, "comentario")   # rastreia a venda vinda do comentario
                 mensagem = f"{resposta}\n\n👉 {link}"
             elif anexar == "CONTATO":
                 mensagem = f"{resposta}\n\n{bloco_contato()}"
