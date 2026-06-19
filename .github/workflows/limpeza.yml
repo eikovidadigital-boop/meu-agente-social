@@ -1,0 +1,28 @@
+name: Limpeza Imagens Antigas
+
+on:
+  schedule:
+    - cron: "0 7 * * 0"     # todo domingo, ~4h BRT
+  workflow_dispatch:        # permite rodar manualmente pelo site
+
+jobs:
+  limpeza:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar o repositorio
+        uses: actions/checkout@v4
+
+      - name: Instalar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Instalar dependencias
+        run: pip install -r requirements.txt
+
+      - name: Apagar imagens antigas do repo de imagens
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          GH_IMAGES_REPO: ${{ secrets.GH_IMAGES_REPO }}
+          LIMPEZA_DIAS: "30"
+        run: python run_limpeza.py
