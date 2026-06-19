@@ -1,0 +1,38 @@
+name: Relatorio Mensal
+
+on:
+  schedule:
+    - cron: "0 12 1 * *"   # dia 1 de cada mes, ~9h BRT
+  workflow_dispatch:        # permite rodar manualmente pelo site
+
+permissions:
+  contents: write           # pra commitar o relatorio no repo
+
+jobs:
+  relatorio:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar o repositorio
+        uses: actions/checkout@v4
+
+      - name: Instalar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Instalar dependencias
+        run: pip install -r requirements.txt
+
+      - name: Gerar relatorio do mes
+        env:
+          PAGE_ACCESS_TOKEN: ${{ secrets.PAGE_ACCESS_TOKEN }}
+          IG_ACCOUNT_ID: ${{ secrets.IG_ACCOUNT_ID }}
+        run: python run_relatorio.py
+
+      - name: Salvar relatorio no repo
+        run: |
+          git config user.name "agente-eiko"
+          git config user.email "agente@eikovida.bot"
+          git add data/relatorios/*.md || true
+          git commit -m "relatorio mensal" || echo "sem mudancas"
+          git push || echo "nada para enviar"
