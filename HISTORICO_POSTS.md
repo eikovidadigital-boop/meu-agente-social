@@ -26,3 +26,4 @@
 | 17/06/2026 23:44 | Story | Kit Renovação da Pele Eiko Vida - Mosqueta + Rícino + Óleo de Limão | 18103895164846175 | PELE |
 | 18/06/2026 00:06 | Story | Kit Purificação Eiko Vida - Óleo de Andiroba + Óleo de Limão | 17993482304989509 | PELE |
 | 18/06/2026 00:39 | Story | Kit Purificação Eiko Vida - Óleo de Andiroba + Óleo de Limão | 17893223190512944 | PELE |
+| 19/06/2026 12:42 | Story | Óleo de Abacate Extra Virgem 30ml Eiko Vida | 18105936964818399 | PELE |
