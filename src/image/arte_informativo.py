@@ -195,10 +195,18 @@ def montar(produto_rgba, nome, foco, tagline3, descricao, beneficios3,
     mx = 64
     badge_foco(d, mx, 100, foco)
 
-    # NOME grande (coluna esquerda)
-    fn = anton(80); asc = fn.getbbox("AÇ")[3]
+    # NOME grande (coluna esquerda) — auto-ajuste: encolhe a fonte de nomes
+    # longos (ex.: kits) pra nunca passar de 3 linhas e não empurrar o layout.
+    tam = 80
+    while tam > 46:
+        fn = anton(tam)
+        linhas_nome = quebrar(d, nome.upper(), fn, 600)
+        if len(linhas_nome) <= 3:
+            break
+        tam -= 6
+    asc = fn.getbbox("AÇ")[3]
     y = 172
-    for ln in quebrar(d, nome.upper(), fn, 600):
+    for ln in linhas_nome:
         d.text((mx, y), ln, font=fn, fill=MARROM_ESC); y += asc + 10
     # tagline
     y += 6
@@ -227,15 +235,19 @@ def montar(produto_rgba, nome, foco, tagline3, descricao, beneficios3,
             d.text((mx+44, ty), l, font=fb, fill=MARROM_ESC); ty += 34
         by = ty + 20
 
-    # SELOS (rodapé esquerda)
+    # SELOS — logo ABAIXO dos benefícios (dinâmico), nunca por cima deles,
+    # e sempre acima do rodapé. É isso que resolve a colisão nos kits.
     fp = mont(21, 700)
     def linha_selos(itens, yy):
         x = mx
         for s in itens:
             larg = d.textlength(s, font=fp)+50
             pill(d, x+larg/2, yy, s, fp, h=52); x += larg + 16
-    linha_selos(["100% PURO", "VEGANO"], H-256)
-    linha_selos(["SEM PARABENOS", "CRUELTY FREE"], H-186)
+    selo_y = by + 28                          # começa abaixo do último benefício
+    selo_y = min(selo_y, H - 90 - 140 - 12)   # teto: não encostar no rodapé
+    selo_y = max(selo_y, 470)                 # piso
+    linha_selos(["100% PURO", "VEGANO"], selo_y)
+    linha_selos(["SEM PARABENOS", "CRUELTY FREE"], selo_y + 70)
 
     # RODAPÉ
     d.rectangle([0, H-90, W, H], fill=MARROM)
