@@ -29,3 +29,4 @@
 | 19/06/2026 12:42 | Story | Óleo de Abacate Extra Virgem 30ml Eiko Vida | 18105936964818399 | PELE |
 | 19/06/2026 19:31 | Story | Terapia Capilar das Estrelas - Óleo de Alecrim + Óleo de Rícino + Óleo de Coco | 18077177393288168 | CABELO |
 | 19/06/2026 20:55 | Reel | Kit Revitalização da Pele - Óleo de Gergelim + Girassol + Semente de uva | 18098819981352107 | com etiqueta |
+| 20/06/2026 18:51 | Carrossel (beneficios) | Óleo de Alecrim Extra Virgem 120ml Eiko Vida | 18416092825182689 | BENEFICIOS |
