@@ -31,3 +31,4 @@
 | 19/06/2026 20:55 | Reel | Kit Revitalização da Pele - Óleo de Gergelim + Girassol + Semente de uva | 18098819981352107 | com etiqueta |
 | 20/06/2026 18:51 | Carrossel (beneficios) | Óleo de Alecrim Extra Virgem 120ml Eiko Vida | 18416092825182689 | BENEFICIOS |
 | 22/06/2026 18:57 | Story | Conjunto Harmonia Natural Eiko Vida - Óleo de Copaíba + Abóbora + Gergelim | 18109675151478950 | PELE |
+| 23/06/2026 20:40 | Reel | Rosa Mosqueta | 18213604204331690 | com etiqueta |
