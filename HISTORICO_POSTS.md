@@ -33,3 +33,4 @@
 | 22/06/2026 18:57 | Story | Conjunto Harmonia Natural Eiko Vida - Óleo de Copaíba + Abóbora + Gergelim | 18109675151478950 | PELE |
 | 23/06/2026 20:40 | Reel | Rosa Mosqueta | 18213604204331690 | com etiqueta |
 | 24/06/2026 07:38 | Story | Kit Medicina Ayurvédica Eiko Vida - Óleo de Coco + Alecrim | 18192159052373830 | CABELO |
+| 24/06/2026 16:18 | Story | Conjunto Vitalidade Citrus Eiko Vida - Óleo de Coco Extra Virgem e Óleo de Limão | 18071153987380974 | PELE |
