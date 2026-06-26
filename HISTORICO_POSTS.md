@@ -35,3 +35,4 @@
 | 24/06/2026 07:38 | Story | Kit Medicina Ayurvédica Eiko Vida - Óleo de Coco + Alecrim | 18192159052373830 | CABELO |
 | 24/06/2026 16:18 | Story | Conjunto Vitalidade Citrus Eiko Vida - Óleo de Coco Extra Virgem e Óleo de Limão | 18071153987380974 | PELE |
 | 24/06/2026 19:01 | Carrossel (curiosidades) | Kit Limpeza Revitalizante Eiko Vida - Óleo de Semente de Uva + Óleo de Limão | 18074539985330637 | CURIOSIDADES |
+| 26/06/2026 07:44 | Story | Óleo de Semente de Abóbora 30ml Eiko Vida | 18107076286874458 | PELE |
