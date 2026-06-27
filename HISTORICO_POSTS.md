@@ -38,3 +38,4 @@
 | 26/06/2026 07:44 | Story | Óleo de Semente de Abóbora 30ml Eiko Vida | 18107076286874458 | PELE |
 | 26/06/2026 15:39 | Story | Kit Medicina Ayurvédica Eiko Vida - Óleo de Coco + Alecrim | 18196092148369579 | CABELO |
 | 26/06/2026 20:49 | Reel | Kit Revitalização da Pele - Óleo de Gergelim + Girassol + Semente de uva | 18330190936250337 | com etiqueta |
+| 27/06/2026 17:43 | Carrossel (curiosidades) | Máscara Capilar Vegana de Coco 300g Eiko Vida | 17896714092524486 | CURIOSIDADES |
