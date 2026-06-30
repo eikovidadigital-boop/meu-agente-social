@@ -40,3 +40,4 @@
 | 26/06/2026 20:49 | Reel | Kit Revitalização da Pele - Óleo de Gergelim + Girassol + Semente de uva | 18330190936250337 | com etiqueta |
 | 27/06/2026 17:43 | Carrossel (curiosidades) | Máscara Capilar Vegana de Coco 300g Eiko Vida | 17896714092524486 | CURIOSIDADES |
 | 29/06/2026 16:27 | Story | Kit Purificação Eiko Vida - Óleo de Andiroba + Óleo de Limão | 18134145679586546 | PELE |
+| 30/06/2026 20:55 | Reel | Rosa Mosqueta | 18088781348641262 | com etiqueta |
