@@ -41,3 +41,4 @@
 | 27/06/2026 17:43 | Carrossel (curiosidades) | Máscara Capilar Vegana de Coco 300g Eiko Vida | 17896714092524486 | CURIOSIDADES |
 | 29/06/2026 16:27 | Story | Kit Purificação Eiko Vida - Óleo de Andiroba + Óleo de Limão | 18134145679586546 | PELE |
 | 30/06/2026 20:55 | Reel | Rosa Mosqueta | 18088781348641262 | com etiqueta |
+| 01/07/2026 08:14 | Story | Terapia Capilar das Estrelas - Óleo de Alecrim + Óleo de Rícino + Óleo de Coco | 18125737162633623 | CABELO |
