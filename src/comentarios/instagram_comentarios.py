@@ -64,10 +64,11 @@ def meu_username(ig_user_id: str, token: str):
         return ""
 
 
-def listar_posts_recentes(ig_user_id: str, token: str, limite: int = 20):
-    """Últimos posts: id, legenda, link e data."""
+def listar_posts_recentes(ig_user_id: str, token: str, limite: int = 60):
+    """Últimos posts: id, legenda, link, data e tipo (FEED / REELS / etc.).
+    O /media já inclui Reels; media_product_type diz qual é qual."""
     dados = _get(f"{ig_user_id}/media", {
-        "fields": "id,caption,permalink,timestamp",
+        "fields": "id,caption,permalink,timestamp,media_product_type,media_type",
         "limit": limite,
         "access_token": token,
     }).get("data", [])
