@@ -29,7 +29,7 @@ from src import utm
 
 # ---- Configurações de segurança ----
 JANELA_HORAS = 48          # não responde comentários mais antigos que isso
-MAX_POSTS = 20             # quantos posts recentes varrer
+MAX_POSTS = 60             # quantos posts recentes varrer (inclui Reels antigos)
 MAX_RESPOSTAS_POR_RUN = 20 # teto de respostas por execução (evita disparo em massa)
 
 
