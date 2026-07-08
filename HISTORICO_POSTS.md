@@ -47,3 +47,4 @@
 | 07/07/2026 11:15 | Story | Óleo de Coco Extra Virgem 200ml Eiko Vida | 18114160849905346 | PELE |
 | 07/07/2026 20:33 | Reel | Rosa Mosqueta | 17899473117328613 | com etiqueta |
 | 08/07/2026 04:41 | Story | Óleo de Ojon (Batana) 30ml Eiko Vida | 17896217841544566 | CABELO |
+| 08/07/2026 12:33 | Story | Conjunto Articular Tri-Essence Eiko Vida - Copaíba, Sucupira e Andiroba | 17908419765259177 | PELE |
