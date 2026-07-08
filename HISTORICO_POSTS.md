@@ -46,3 +46,4 @@
 | 01/07/2026 19:09 | Carrossel (modo_usar) | Kit Limpeza Revitalizante Eiko Vida - Óleo de Semente de Uva + Óleo de Limão | 17913227658421757 | MODO_USAR |
 | 07/07/2026 11:15 | Story | Óleo de Coco Extra Virgem 200ml Eiko Vida | 18114160849905346 | PELE |
 | 07/07/2026 20:33 | Reel | Rosa Mosqueta | 17899473117328613 | com etiqueta |
+| 08/07/2026 04:41 | Story | Óleo de Ojon (Batana) 30ml Eiko Vida | 17896217841544566 | CABELO |
