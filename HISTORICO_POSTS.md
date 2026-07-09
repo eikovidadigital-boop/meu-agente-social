@@ -49,3 +49,4 @@
 | 08/07/2026 04:41 | Story | Óleo de Ojon (Batana) 30ml Eiko Vida | 17896217841544566 | CABELO |
 | 08/07/2026 12:33 | Story | Conjunto Articular Tri-Essence Eiko Vida - Copaíba, Sucupira e Andiroba | 17908419765259177 | PELE |
 | 08/07/2026 17:48 | Carrossel (beneficios) | Óleo de Rosa Mosqueta Extra Virgem Eiko Vida | 18113668321875017 | BENEFICIOS |
+| 09/07/2026 20:32 | Story | Óleo de Coco Extra Virgem 100ml Eiko Vida | 17922839481379426 | PELE |
