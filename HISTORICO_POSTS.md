@@ -54,3 +54,4 @@
 | 10/07/2026 18:13 | Reel | Conjunto Vitalidade Citrus - Óleo de Coco e Óleo de Limão | 18098705621350037 | com etiqueta |
 | 11/07/2026 14:56 | Carrossel (beneficios) | Óleo de Coco Extra Virgem Spray 100ml Eiko Vida | 18123670597672630 | BENEFICIOS |
 | 13/07/2026 13:04 | Story | Kit Capilar Eiko Vida - Óleo de Rícino + Óleo de Gergelim | 17929141251125681 | CABELO |
+| 14/07/2026 18:06 | Reel | Alecrim | 18044513009644727 | com etiqueta |
