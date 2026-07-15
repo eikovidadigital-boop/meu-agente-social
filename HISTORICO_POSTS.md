@@ -56,3 +56,4 @@
 | 13/07/2026 13:04 | Story | Kit Capilar Eiko Vida - Óleo de Rícino + Óleo de Gergelim | 17929141251125681 | CABELO |
 | 14/07/2026 18:06 | Reel | Alecrim | 18044513009644727 | com etiqueta |
 | 14/07/2026 20:21 | Story | Óleo de Sucupira Extra Virgem — Cosmético | Eiko Vida | 18089290355176674 | PELE |
+| 15/07/2026 15:10 | Carrossel (curiosidades) | Óleo de Alecrim Premium Eiko Vida | 18114365206825016 | CURIOSIDADES |
