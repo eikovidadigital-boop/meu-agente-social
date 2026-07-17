@@ -58,3 +58,4 @@
 | 14/07/2026 20:21 | Story | Óleo de Sucupira Extra Virgem — Cosmético | Eiko Vida | 18089290355176674 | PELE |
 | 15/07/2026 15:10 | Carrossel (curiosidades) | Óleo de Alecrim Premium Eiko Vida | 18114365206825016 | CURIOSIDADES |
 | 16/07/2026 20:25 | Story | Óleo de Coco Extra Virgem 100ml Eiko Vida | 18027193835665346 | PELE |
+| 17/07/2026 11:59 | Story | Kit Óleo de Ojon, Rosa Mosqueta e Coco Eiko Vida | 18059080532519181 | PELE |
