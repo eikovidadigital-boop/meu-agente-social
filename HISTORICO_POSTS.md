@@ -60,3 +60,4 @@
 | 16/07/2026 20:25 | Story | Óleo de Coco Extra Virgem 100ml Eiko Vida | 18027193835665346 | PELE |
 | 17/07/2026 11:59 | Story | Kit Óleo de Ojon, Rosa Mosqueta e Coco Eiko Vida | 18059080532519181 | PELE |
 | 17/07/2026 18:03 | Reel | Conjunto Vitalidade Citrus - Óleo de Coco e Óleo de Limão | 18059107451767897 | com etiqueta |
+| 20/07/2026 12:14 | Story | Kit Fortalecimento Capilar Eiko Vida - Óleo de Semente de Abóbora + Óleo de Alecrim | 18110320121052058 | CABELO |
