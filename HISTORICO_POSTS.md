@@ -62,3 +62,4 @@
 | 17/07/2026 18:03 | Reel | Conjunto Vitalidade Citrus - Óleo de Coco e Óleo de Limão | 18059107451767897 | com etiqueta |
 | 20/07/2026 12:14 | Story | Kit Fortalecimento Capilar Eiko Vida - Óleo de Semente de Abóbora + Óleo de Alecrim | 18110320121052058 | CABELO |
 | 21/07/2026 18:19 | Reel | Alecrim | 17900241978498642 | com etiqueta |
+| 21/07/2026 20:15 | Story | Óleo de Sucupira Extra Virgem — Cosmético | Eiko Vida | 18478180342097784 | PELE |
