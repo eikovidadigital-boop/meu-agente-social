@@ -63,3 +63,4 @@
 | 20/07/2026 12:14 | Story | Kit Fortalecimento Capilar Eiko Vida - Óleo de Semente de Abóbora + Óleo de Alecrim | 18110320121052058 | CABELO |
 | 21/07/2026 18:19 | Reel | Alecrim | 17900241978498642 | com etiqueta |
 | 21/07/2026 20:15 | Story | Óleo de Sucupira Extra Virgem — Cosmético | Eiko Vida | 18478180342097784 | PELE |
+| 22/07/2026 12:17 | Story | Conjunto Articular Tri-Essence Eiko Vida - Copaíba, Sucupira e Andiroba | 17888799120665949 | PELE |
