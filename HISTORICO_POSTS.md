@@ -66,3 +66,4 @@
 | 22/07/2026 12:17 | Story | Conjunto Articular Tri-Essence Eiko Vida - Copaíba, Sucupira e Andiroba | 17888799120665949 | PELE |
 | 22/07/2026 15:09 | Carrossel (modo_usar) | Óleo de Alecrim Premium Eiko Vida | 18059563430742212 | MODO_USAR |
 | 23/07/2026 20:00 | Story | Óleo de Coco Extra Virgem 100ml Eiko Vida | 18002396066777307 | PELE |
+| 24/07/2026 12:02 | Story | Óleo de Ojon (Batana) 30ml Eiko Vida | 17961729423154147 | CABELO |
