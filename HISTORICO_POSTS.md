@@ -71,3 +71,4 @@
 | 25/07/2026 15:00 | Carrossel (modo_usar) | Óleo de Coco Extra Virgem Spray 100ml Eiko Vida | 18116304268821612 | MODO_USAR |
 | 27/07/2026 13:06 | Story | Kit Capilar Eiko Vida - Óleo de Rícino + Óleo de Gergelim | 17938673628309857 | CABELO |
 | 28/07/2026 18:15 | Reel | Alecrim | 18007514408755610 | com etiqueta |
+| 28/07/2026 20:11 | Story | Óleo de Sucupira Extra Virgem — Cosmético | Eiko Vida | 18137807677577643 | PELE |
