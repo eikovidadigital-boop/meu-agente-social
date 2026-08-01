@@ -77,3 +77,4 @@
 | 30/07/2026 20:31 | Story | Óleo de Coco Extra Virgem 100ml Eiko Vida | 18128789110732856 | PELE |
 | 31/07/2026 12:21 | Story | Óleo de Ojon (Batana) 30ml Eiko Vida | 17940835947328552 | CABELO |
 | 31/07/2026 18:14 | Reel | Conjunto Vitalidade Citrus - Óleo de Coco e Óleo de Limão | 18087075191171259 | com etiqueta |
+| 01/08/2026 15:03 | Carrossel (beneficios) | Óleo de Coco Extra Virgem 200ml Eiko Vida | 18139169314583983 | BENEFICIOS |
