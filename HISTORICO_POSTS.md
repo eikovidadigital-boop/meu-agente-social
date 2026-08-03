@@ -78,3 +78,4 @@
 | 31/07/2026 12:21 | Story | Óleo de Ojon (Batana) 30ml Eiko Vida | 17940835947328552 | CABELO |
 | 31/07/2026 18:14 | Reel | Conjunto Vitalidade Citrus - Óleo de Coco e Óleo de Limão | 18087075191171259 | com etiqueta |
 | 01/08/2026 15:03 | Carrossel (beneficios) | Óleo de Coco Extra Virgem 200ml Eiko Vida | 18139169314583983 | BENEFICIOS |
+| 03/08/2026 12:55 | Story | Kit Fortalecimento Capilar Eiko Vida - Óleo de Semente de Abóbora + Óleo de Alecrim | 18013079429926178 | CABELO |
