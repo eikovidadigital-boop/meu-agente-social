@@ -82,3 +82,4 @@
 | 04/08/2026 18:20 | Reel | Alecrim | 18095983955123455 | com etiqueta |
 | 04/08/2026 20:32 | Story | Óleo de Sucupira Extra Virgem — Cosmético | Eiko Vida | 18083071895308268 | PELE |
 | 05/08/2026 12:24 | Story | Conjunto Articular Tri-Essence Eiko Vida - Copaíba, Sucupira e Andiroba | 18123509950763452 | PELE |
+| 05/08/2026 15:23 | Carrossel (curiosidades) | Óleo de Alecrim Premium Eiko Vida | 18137663971539399 | CURIOSIDADES |
